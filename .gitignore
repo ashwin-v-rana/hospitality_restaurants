@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+
+# Local Claude Code settings (per-machine)
+.claude/settings.local.json
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/
