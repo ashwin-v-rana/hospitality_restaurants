@@ -15,13 +15,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cancelAction } from "@/app/(app)/actions";
-import { formatTime } from "@/lib/constants";
+import { formatTime, formatDate } from "@/lib/constants";
 import type { ReservationWithMember } from "@/lib/queries";
 
 export function ReservationTable({
   reservations,
+  showDate = false,
 }: {
   reservations: ReservationWithMember[];
+  /** Prepend a Date column — used by the cross-date "Upcoming" view. */
+  showDate?: boolean;
 }) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -52,7 +55,9 @@ export function ReservationTable({
       <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
         <p className="font-medium text-foreground">No reservations</p>
         <p className="mt-1 text-sm">
-          There are no reservations for this date.
+          {showDate
+            ? "There are no upcoming reservations."
+            : "There are no reservations for this date."}
         </p>
       </div>
     );
@@ -63,6 +68,7 @@ export function ReservationTable({
       <Table>
         <TableHeader>
           <TableRow>
+            {showDate && <TableHead className="w-[110px]">Date</TableHead>}
             <TableHead className="w-[90px]">Time</TableHead>
             <TableHead>Member</TableHead>
             <TableHead className="w-[80px] text-center">Party</TableHead>
@@ -80,6 +86,11 @@ export function ReservationTable({
               .join(" · ");
             return (
               <TableRow key={r.id} className={cancelled ? "opacity-60" : ""}>
+                {showDate && (
+                  <TableCell className="font-medium">
+                    {formatDate(r.slot_date)}
+                  </TableCell>
+                )}
                 <TableCell className="font-mono font-medium">
                   {formatTime(r.slot_time)}
                 </TableCell>

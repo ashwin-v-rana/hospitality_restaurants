@@ -89,6 +89,30 @@ export async function getReservations(
   return (data ?? []) as ReservationWithMember[];
 }
 
+/**
+ * Upcoming reservations for a restaurant from a date onward (default: all
+ * statuses), ordered by date then time. Used by the "Upcoming" view so a
+ * booking made for any future date is visible without knowing its exact date.
+ */
+export async function getUpcomingReservations(
+  supabase: DB,
+  restaurantId: string,
+  fromDate: string,
+  limit = 200,
+): Promise<ReservationWithMember[]> {
+  const { data, error } = await supabase
+    .from("reservations")
+    .select("*, members(first_name, last_name, member_number, phone)")
+    .eq("restaurant_id", restaurantId)
+    .eq("status", "booked")
+    .gte("slot_date", fromDate)
+    .order("slot_date")
+    .order("slot_time")
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as ReservationWithMember[];
+}
+
 /** Search members by name, member number, or phone (case-insensitive). */
 export async function searchMembers(
   supabase: DB,
