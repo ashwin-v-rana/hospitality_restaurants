@@ -1,9 +1,8 @@
-# The Ned — Cecconi's Reservation System (Talkdesk Multi-Agent)
+# The Restaurant — Reservation System (Talkdesk Multi-Agent)
 
 A **Talkdesk Multi-Agent AI System** for table reservations, plus the Supabase
-(Postgres) database it runs on. Partner: **GreenIP**. End customer: **The Ned**
-(members-only club, London). **Scope: one restaurant — Cecconi's at The Ned
-London.** Voice + chat.
+(Postgres) database it runs on. End customer: **The Restaurant** (a members-only
+venue). **Scope: a single restaurant location.** Voice + chat.
 
 The agents query Supabase **directly** via the `execute_sql` MCP tool. Email and
 SMS go through MCP/workflow tools (see *Tools & infrastructure*). There is no
@@ -24,7 +23,7 @@ JSON only. Action agents never speak to the customer directly.
 
 | Agent | Role | Responsibility |
 |---|---|---|
-| **Cecconi's Orchestrator** | SUPERVISING_AGENT | Greets, routes on intent, relays sub-agent messages **verbatim**. Contains zero business logic. The only voice the customer hears. |
+| **The Restaurant Orchestrator** | SUPERVISING_AGENT | Greets, routes on intent, relays sub-agent messages **verbatim**. Contains zero business logic. The only voice the customer hears. |
 | **Auth Agent** | ACTION_AGENT | Phone + SMS-OTP authentication; writes member context to session variables. Unlimited attempts, no lockout. |
 | **Booking Agent** | ACTION_AGENT | Makes reservations: collect date/time/party, opening-hours + lead-time guards, availability check, atomic write, dual confirmation. 7+ parties → large-party phone. |
 | **Reservation Management Agent** | ACTION_AGENT | Looks up and cancels reservations; disambiguates when a member has more than one; releases the slot; dual confirmation. |
@@ -134,7 +133,7 @@ Slots are every 15 minutes, first → last seating **inclusive**.
 
 **Other constants:**
 ```
-RESTAURANT_ID (Cecconi's) = cec0cec0-0000-4000-8000-000000000001   (hardcoded in prompts)
+RESTAURANT_ID             = cec0cec0-0000-4000-8000-000000000001   (hardcoded in prompts)
 CONFIRMATION PREFIX       = CEC
 LARGE-PARTY (7+) PHONE     = +442038282000
 TURN-TIME RULE            = <=2 -> 90 min, <=4 -> 120 min, 5 or 6 -> 150 min
@@ -348,6 +347,7 @@ re-release; no touchpoint-driven `restaurant_id` injection (hardcoded constant).
   can't regress it.
 - OpenTable-shaped API layer on Vercel (agents would call it instead of direct
   SQL).
-- **The Ned Resort** — multi-restaurant (10+) across multiple global locations:
-  a clean schema (location + restaurant as real entities, per-location timezone),
-  reusing the agent patterns above as reference. Tracked in a separate chat.
+- **Multi-location expansion** — multiple restaurants (10+) across multiple
+  global locations: a clean schema (location + restaurant as real entities,
+  per-location timezone), reusing the agent patterns above as reference. Tracked
+  in a separate chat.
