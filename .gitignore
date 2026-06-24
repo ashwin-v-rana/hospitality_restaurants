@@ -14,3 +14,12 @@ node_modules/
 # Supabase local
 supabase/.branches/
 supabase/.temp/
+
+# Next.js
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+/coverage
+.vercel
