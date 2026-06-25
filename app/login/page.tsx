@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useActionState } from "react";
 import { login, type LoginState } from "@/app/auth-actions";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,15 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm shadow-sm">
-        <CardHeader className="space-y-1 text-center">
-          <p className="font-mono text-xs uppercase tracking-[0.25em] text-primary">
-            The Ned
-          </p>
+        <CardHeader className="space-y-3 text-center">
+          <Image
+            src="/thened-cecconis-logo.svg"
+            alt="The Ned — Cecconi's"
+            width={194}
+            height={74}
+            priority
+            className="mx-auto h-16 w-auto"
+          />
           <CardTitle className="text-2xl">Reservations Console</CardTitle>
           <CardDescription>Sign in to manage table availability.</CardDescription>
         </CardHeader>

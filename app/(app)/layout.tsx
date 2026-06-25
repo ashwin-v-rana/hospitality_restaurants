@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getRestaurantScope } from "@/lib/selected-restaurant";
@@ -25,11 +27,16 @@ export default async function AppLayout({
     <div className="flex min-h-dvh flex-col">
       <header className="sticky top-0 z-30 border-b bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[0.65rem] uppercase tracking-[0.25em] text-primary">
-              The Ned
-            </span>
-          </div>
+          <Link href="/" className="flex items-center" aria-label="The Ned — Cecconi's home">
+            <Image
+              src="/thened-cecconis-logo.svg"
+              alt="The Ned — Cecconi's"
+              width={194}
+              height={74}
+              priority
+              className="h-8 w-auto"
+            />
+          </Link>
           <MainNav />
           <div className="ml-auto flex items-center gap-3">
             <RestaurantSwitcher
