@@ -11,6 +11,16 @@ This console is the **human counterpart to an existing CXA AI agent**
 atomic booking pattern. Treat the AI agent's behaviour as the contract this
 console has to stay consistent with.
 
+> **⚠️ Authentication model changed (app-managed, not Supabase Auth).**
+> Agents now authenticate against a bcrypt `agents.password_hash` and get an
+> app-signed `jose` JWT session cookie — **Supabase Auth (GoTrue) is no longer
+> used.** All server DB access uses the **service-role key** (server-only), so
+> RLS no longer scopes reads and the booking/member RPCs no longer check
+> `auth.uid()` — **authorization is enforced in app code** from the session
+> (`lib/auth.ts`, `lib/agent.ts`, `lib/authz.ts`). Sections 1, 5, 8 and 12 below
+> describe the original Supabase-Auth design and are kept for historical context;
+> where they conflict with this note, this note wins.
+
 ---
 
 ## 1. Tech stack (locked decisions — do not substitute)
@@ -357,10 +367,17 @@ components/
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://ehsvhlaatnxzhvfzxpnj.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key from Supabase project settings>
+# Added for app-managed auth:
+SUPABASE_SERVICE_ROLE_KEY=<service-role key — server-only, NEVER NEXT_PUBLIC>
+JWT_SECRET=<32-byte base64: openssl rand -base64 32>
 ```
 
-Do **not** put the service-role key in the app. If a one-off admin script needs
-it, keep it in a server-only script outside the Next.js bundle.
+**Updated:** the app is now app-managed-auth (see the note under §0/top). It
+uses the **service-role key server-side** for all DB access and `JWT_SECRET` to
+sign session cookies. Both are **server-only** — never prefix them with
+`NEXT_PUBLIC_` and never import `lib/supabase/admin.ts` from a client component.
+Add all four vars to `.env.local` and to the Vercel project (Production /
+Preview / Development) **before** deploying, or the app will fail at runtime.
 
 Both env vars are already set on the Vercel project (Production / Preview /
 Development). The login flow uses `signInWithPassword` (no OAuth / magic links),
@@ -434,6 +451,11 @@ git push origin main               # deploy (Vercel auto-deploys from main)
 - Book parties of 7+ — route them to `large_party_phone`.
 - Drop the `anon_read_*` policies without confirming no other demo depends on them.
 - Assume seeded slots are "today" — they're 2026-06-09→22; roll forward for demos.
+- **Rely on RLS for access control** — auth is app-managed and all server DB
+  access is service-role, so RLS no longer scopes anything. Enforce authorization
+  in server actions from the session (`getCurrentAgent` + `lib/authz.ts`:
+  `agentHasRestaurant` / `canManageMembers` / `isAdmin`) before any privileged
+  read/write. The service-role key still must **never** reach the browser.
 
 ---
 

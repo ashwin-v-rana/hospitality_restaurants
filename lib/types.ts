@@ -51,6 +51,9 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean
+          last_login_at: string | null
+          must_change_password: boolean
+          password_hash: string | null
           role: string
         }
         Insert: {
@@ -59,6 +62,9 @@ export type Database = {
           full_name?: string | null
           id: string
           is_active?: boolean
+          last_login_at?: string | null
+          must_change_password?: boolean
+          password_hash?: string | null
           role?: string
         }
         Update: {
@@ -67,6 +73,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean
+          last_login_at?: string | null
+          must_change_password?: boolean
+          password_hash?: string | null
           role?: string
         }
         Relationships: []
@@ -310,6 +319,9 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean
+          last_login_at: string | null
+          must_change_password: boolean
+          password_hash: string | null
           role: string
         }
         SetofOptions: {
@@ -327,6 +339,9 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean
+          last_login_at: string | null
+          must_change_password: boolean
+          password_hash: string | null
           role: string
         }
         SetofOptions: {
@@ -336,6 +351,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      agent_can_manage_members: { Args: never; Returns: boolean }
       agent_has_restaurant: {
         Args: { p_restaurant_id: string }
         Returns: boolean

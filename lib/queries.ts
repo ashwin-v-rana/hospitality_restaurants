@@ -24,8 +24,34 @@ export async function getAllAgents(supabase: DB): Promise<AdminAgent[]> {
   return (data ?? []) as AdminAgent[];
 }
 
-/** Restaurants the logged-in agent may access (RLS returns only assigned ones). */
-export async function getAssignedRestaurants(supabase: DB): Promise<Restaurant[]> {
+/**
+ * Restaurants the agent is assigned to. RLS no longer scopes this (auth is
+ * app-managed), so we filter by the agent's agent_restaurants links explicitly.
+ */
+export async function getAssignedRestaurants(
+  supabase: DB,
+  agentId: string,
+): Promise<Restaurant[]> {
+  const { data: links, error: linkErr } = await supabase
+    .from("agent_restaurants")
+    .select("restaurant_id")
+    .eq("agent_id", agentId);
+  if (linkErr) throw linkErr;
+
+  const ids = (links ?? []).map((l) => l.restaurant_id);
+  if (ids.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from("restaurants")
+    .select("*")
+    .in("id", ids)
+    .order("name");
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Every restaurant (admin-only callers — used by the agent admin UI). */
+export async function getAllRestaurants(supabase: DB): Promise<Restaurant[]> {
   const { data, error } = await supabase
     .from("restaurants")
     .select("*")

@@ -1,34 +1,13 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import type { Database } from "@/lib/types";
+import "server-only";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
- * Server-side Supabase client bound to the request's cookies. Use in Server
- * Components, Route Handlers, and Server Actions. Reads are RLS-scoped to the
- * logged-in agent's assigned restaurants.
+ * Server-side Supabase client for data access. Authentication is app-managed
+ * (lib/auth.ts), so this returns the SERVICE-ROLE client — there is no
+ * per-request Supabase session. Authorization is enforced in app code from the
+ * signed session, NOT by RLS. Kept async so existing `await createClient()`
+ * call sites keep working.
  */
 export async function createClient() {
-  const cookieStore = await cookies();
-
-  return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
-          } catch {
-            // Called from a Server Component — cookies are read-only there.
-            // middleware.ts refreshes the session cookie instead, so this is safe to ignore.
-          }
-        },
-      },
-    },
-  );
+  return createAdminClient();
 }

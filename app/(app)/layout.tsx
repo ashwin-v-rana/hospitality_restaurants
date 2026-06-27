@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import { getRestaurantScope } from "@/lib/selected-restaurant";
 import { getCurrentAgent } from "@/lib/agent";
 import { RestaurantSwitcher } from "@/components/RestaurantSwitcher";
@@ -13,21 +12,11 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // Belt-and-suspenders: middleware already gates this, but never render the
-  // shell without a user.
-  if (!user) redirect("/login");
-
+  // proxy.ts already verified a valid session to reach here. getCurrentAgent
+  // re-checks the DB, so a deactivated/removed agent (valid JWT, but no longer
+  // allowed) returns null — bounce them through the cookie-clearing route.
   const agent = await getCurrentAgent();
-  // A deactivated agent keeps a valid session but loses access — sign them out.
-  if (agent && !agent.is_active) {
-    await supabase.auth.signOut();
-    redirect("/login?reason=inactive");
-  }
+  if (!agent) redirect("/auth/signout?reason=inactive");
 
   const { restaurants, selected } = await getRestaurantScope();
 
@@ -45,7 +34,7 @@ export default async function AppLayout({
               className="h-8 w-auto"
             />
           </Link>
-          <MainNav isAdmin={agent?.role === "admin"} />
+          <MainNav isAdmin={agent.role === "admin"} />
           <div className="ml-auto flex items-center gap-3">
             <RestaurantSwitcher
               restaurants={restaurants}

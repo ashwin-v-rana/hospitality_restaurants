@@ -1,20 +1,23 @@
 /**
- * Seed the demo agent logins.
+ * Seed (or reset) the demo agent logins.
  *
- * Server-only — this lives OUTSIDE the Next.js bundle and uses the service-role
- * key (CLAUDE.md §8: the key never ships to the browser). It creates Supabase
- * Auth users, then links each to an `agents` profile + `agent_restaurants`.
+ * Auth is app-managed (no Supabase Auth): this upserts `agents` rows with a
+ * bcrypt password_hash and links each to a restaurant. Server-only — it lives
+ * OUTSIDE the Next.js bundle and uses the service-role key, which never ships to
+ * the browser.
  *
  * Run:
  *   SUPABASE_SERVICE_ROLE_KEY=... npm run seed:agents
  * or, with the key already in .env.local (gitignored):
  *   npm run seed:agents
  *
- * Idempotent: re-running skips users that already exist and re-applies links.
+ * Idempotent: re-running resets each demo agent to the password below and
+ * re-applies the restaurant link.
  */
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
 
 // Minimal .env.local loader so the script works without extra deps.
 function loadEnvLocal() {
@@ -53,78 +56,56 @@ if (!URL || !SERVICE_KEY) {
   process.exit(1);
 }
 
-type Demo = { email: string; fullName: string; role: string };
+type Demo = {
+  email: string;
+  fullName: string;
+  role: string;
+  mustChange: boolean;
+};
 
-// alice/bob/carol are all `host` (read-only member directory). Their passwords
-// may live in a public README, so none of them can write members or reach the
-// admin tools — only the admin account (whose password should be rotated) can.
+// alice/bob/carol are all `host` (read-only member directory); their passwords
+// may live in a public README. Only the admin can write members / manage agents,
+// and the admin is forced to change its password on first login.
 const DEMO_AGENTS: Demo[] = [
-  { email: "admin@thened-demo.com", fullName: "Avery Stone", role: "admin" },
-  { email: "alice@thened-demo.com", fullName: "Alice Hart", role: "host" },
-  { email: "bob@thened-demo.com", fullName: "Bob Mensah", role: "host" },
-  { email: "carol@thened-demo.com", fullName: "Carol Nguyen", role: "host" },
+  { email: "admin@thened-demo.com", fullName: "Avery Stone", role: "admin", mustChange: true },
+  { email: "alice@thened-demo.com", fullName: "Alice Hart", role: "host", mustChange: false },
+  { email: "bob@thened-demo.com", fullName: "Bob Mensah", role: "host", mustChange: false },
+  { email: "carol@thened-demo.com", fullName: "Carol Nguyen", role: "host", mustChange: false },
 ];
 
 const admin = createClient(URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-async function findUserIdByEmail(email: string): Promise<string | null> {
-  // listUsers is paginated; scan a few pages for the demo set.
-  for (let page = 1; page <= 10; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({
-      page,
-      perPage: 200,
-    });
-    if (error) throw error;
-    const hit = data.users.find(
-      (u) => u.email?.toLowerCase() === email.toLowerCase(),
-    );
-    if (hit) return hit.id;
-    if (data.users.length < 200) break;
-  }
-  return null;
-}
-
 async function main() {
+  const password_hash = await bcrypt.hash(PASSWORD, 10);
+
   for (const a of DEMO_AGENTS) {
-    let userId: string | null = null;
-
-    const { data, error } = await admin.auth.admin.createUser({
-      email: a.email,
-      password: PASSWORD,
-      email_confirm: true,
-      user_metadata: { full_name: a.fullName },
-    });
-
-    if (error) {
-      // Most likely "already registered" — look the user up and continue.
-      userId = await findUserIdByEmail(a.email);
-      if (!userId) {
-        console.error(`✗ ${a.email}: ${error.message}`);
-        continue;
-      }
-      console.log(`• ${a.email}: auth user already exists`);
-    } else {
-      userId = data.user.id;
-      console.log(`✓ ${a.email}: auth user created`);
-    }
-
-    const { error: agentErr } = await admin
+    const { data: agent, error } = await admin
       .from("agents")
       .upsert(
-        { id: userId, email: a.email, full_name: a.fullName, role: a.role },
-        { onConflict: "id" },
-      );
-    if (agentErr) {
-      console.error(`✗ ${a.email}: agents upsert — ${agentErr.message}`);
+        {
+          email: a.email,
+          full_name: a.fullName,
+          role: a.role,
+          password_hash,
+          must_change_password: a.mustChange,
+          is_active: true,
+        },
+        { onConflict: "email" },
+      )
+      .select("id")
+      .single();
+
+    if (error || !agent) {
+      console.error(`✗ ${a.email}: ${error?.message ?? "upsert failed"}`);
       continue;
     }
 
     const { error: linkErr } = await admin
       .from("agent_restaurants")
       .upsert(
-        { agent_id: userId, restaurant_id: CECCONIS },
+        { agent_id: agent.id, restaurant_id: CECCONIS },
         { onConflict: "agent_id,restaurant_id" },
       );
     if (linkErr) {
@@ -132,12 +113,12 @@ async function main() {
       continue;
     }
 
-    console.log(`  ↳ ${a.role}, assigned to Cecconi's`);
+    console.log(`✓ ${a.email} — ${a.role}, assigned to Cecconi's`);
   }
 
   console.log(
-    `\nDone. All demo agents use the password: ${PASSWORD}\n` +
-      "Log in at /login (admin@thened-demo.com sees the Agents admin page).",
+    `\nDone. Demo agents use the password: ${PASSWORD}\n` +
+      "admin@thened-demo.com must change it on first login.",
   );
 }
 

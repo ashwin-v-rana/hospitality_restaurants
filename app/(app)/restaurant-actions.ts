@@ -2,24 +2,19 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentAgent } from "@/lib/agent";
+import { agentHasRestaurant } from "@/lib/authz";
 import { SELECTED_RESTAURANT_COOKIE } from "@/lib/constants";
 
 /**
  * Persist the selected restaurant in a cookie. Re-checks that the agent is
- * actually assigned to it (RLS) before trusting the input, so a tampered value
- * can never widen access.
+ * actually assigned to it before trusting the input, so a tampered value can
+ * never widen access. (RLS no longer does this — auth is app-managed.)
  */
 export async function setSelectedRestaurant(restaurantId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("restaurants")
-    .select("id")
-    .eq("id", restaurantId)
-    .maybeSingle();
-
-  if (error || !data) {
-    // Not assigned / not found — ignore silently.
+  const agent = await getCurrentAgent();
+  if (!agent || !(await agentHasRestaurant(agent.id, restaurantId))) {
+    // Not signed in / not assigned — ignore silently.
     return;
   }
 

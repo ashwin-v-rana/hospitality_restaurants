@@ -1,18 +1,18 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentAgent } from "@/lib/agent";
-import { getAllAgents, getAssignedRestaurants } from "@/lib/queries";
+import { getAllAgents, getAllRestaurants } from "@/lib/queries";
 import { AgentsManager } from "@/components/AgentsManager";
 
 export default async function AdminAgentsPage() {
   const agent = await getCurrentAgent();
-  // Admin-only. The RPCs enforce this server-side too; this is the UI gate.
+  // Admin-only. The actions re-check this server-side; this is the UI gate.
   if (!agent || agent.role !== "admin") redirect("/");
 
   const supabase = await createClient();
   const [agents, restaurants] = await Promise.all([
     getAllAgents(supabase),
-    getAssignedRestaurants(supabase), // admins read all restaurants via RLS
+    getAllRestaurants(supabase),
   ]);
 
   return (
