@@ -55,9 +55,12 @@ if (!URL || !SERVICE_KEY) {
 
 type Demo = { email: string; fullName: string; role: string };
 
+// alice/bob/carol are all `host` (read-only member directory). Their passwords
+// may live in a public README, so none of them can write members or reach the
+// admin tools — only the admin account (whose password should be rotated) can.
 const DEMO_AGENTS: Demo[] = [
   { email: "admin@thened-demo.com", fullName: "Avery Stone", role: "admin" },
-  { email: "alice@thened-demo.com", fullName: "Alice Hart", role: "manager" },
+  { email: "alice@thened-demo.com", fullName: "Alice Hart", role: "host" },
   { email: "bob@thened-demo.com", fullName: "Bob Mensah", role: "host" },
   { email: "carol@thened-demo.com", fullName: "Carol Nguyen", role: "host" },
 ];
