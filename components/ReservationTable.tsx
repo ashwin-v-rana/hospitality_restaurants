@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { BookMarked, X } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/Avatar";
+import { EmptyState } from "@/components/EmptyState";
 import { cancelAction } from "@/app/(app)/actions";
 import { formatTime, formatDate } from "@/lib/constants";
 import type { ReservationWithMember } from "@/lib/queries";
@@ -52,14 +54,15 @@ export function ReservationTable({
 
   if (reservations.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
-        <p className="font-medium text-foreground">No reservations</p>
-        <p className="mt-1 text-sm">
-          {showDate
+      <EmptyState
+        icon={BookMarked}
+        title="No reservations"
+        description={
+          showDate
             ? "There are no upcoming reservations."
-            : "There are no reservations for this date."}
-        </p>
-      </div>
+            : "There are no reservations for this date."
+        }
+      />
     );
   }
 
@@ -96,13 +99,20 @@ export function ReservationTable({
                 </TableCell>
                 <TableCell>
                   {r.members ? (
-                    <div className="flex flex-col">
-                      <span className="font-medium">
-                        {r.members.first_name} {r.members.last_name}
-                      </span>
-                      <span className="font-mono text-xs text-muted-foreground">
-                        {r.members.member_number}
-                      </span>
+                    <div className="flex items-center gap-2.5">
+                      <Avatar
+                        first={r.members.first_name}
+                        last={r.members.last_name}
+                        seed={r.member_id}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {r.members.first_name} {r.members.last_name}
+                        </span>
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {r.members.member_number}
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     <span className="text-muted-foreground">—</span>
@@ -116,7 +126,14 @@ export function ReservationTable({
                   {note || "—"}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={cancelled ? "outline" : "default"}>
+                  <Badge
+                    variant={cancelled ? "outline" : "default"}
+                    className={
+                      cancelled
+                        ? "text-muted-foreground"
+                        : "bg-emerald-600 text-white"
+                    }
+                  >
                     {cancelled ? "Cancelled" : "Booked"}
                   </Badge>
                 </TableCell>

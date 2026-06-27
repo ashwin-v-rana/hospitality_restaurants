@@ -6,8 +6,23 @@ export type ServiceWindow = Tables<"service_windows">;
 export type TimeSlot = Tables<"time_slots">;
 export type Member = Tables<"members">;
 export type Reservation = Tables<"reservations">;
+export type Agent = Tables<"agents">;
 
 export type DB = SupabaseClient<Database>;
+
+export type AdminAgent = Agent & {
+  agent_restaurants: { restaurant_id: string }[];
+};
+
+/** All agents with their restaurant links (admin-only via RLS). */
+export async function getAllAgents(supabase: DB): Promise<AdminAgent[]> {
+  const { data, error } = await supabase
+    .from("agents")
+    .select("*, agent_restaurants(restaurant_id)")
+    .order("created_at");
+  if (error) throw error;
+  return (data ?? []) as AdminAgent[];
+}
 
 /** Restaurants the logged-in agent may access (RLS returns only assigned ones). */
 export async function getAssignedRestaurants(supabase: DB): Promise<Restaurant[]> {
@@ -111,6 +126,25 @@ export async function getUpcomingReservations(
     .limit(limit);
   if (error) throw error;
   return (data ?? []) as ReservationWithMember[];
+}
+
+export type MemberWithCount = Member & { reservations: { count: number }[] };
+
+/**
+ * Members for the management list, newest first, each with a count of its
+ * reservations the agent can see (RLS-scoped to assigned restaurants).
+ */
+export async function getMembers(
+  supabase: DB,
+  limit = 100,
+): Promise<MemberWithCount[]> {
+  const { data, error } = await supabase
+    .from("members")
+    .select("*, reservations(count)")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as MemberWithCount[];
 }
 
 /** Search members by name, member number, or phone (case-insensitive). */

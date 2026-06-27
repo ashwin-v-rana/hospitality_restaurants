@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getRestaurantScope } from "@/lib/selected-restaurant";
+import { getCurrentAgent } from "@/lib/agent";
 import { RestaurantSwitcher } from "@/components/RestaurantSwitcher";
 import { MainNav } from "@/components/MainNav";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -21,6 +22,13 @@ export default async function AppLayout({
   // shell without a user.
   if (!user) redirect("/login");
 
+  const agent = await getCurrentAgent();
+  // A deactivated agent keeps a valid session but loses access — sign them out.
+  if (agent && !agent.is_active) {
+    await supabase.auth.signOut();
+    redirect("/login?reason=inactive");
+  }
+
   const { restaurants, selected } = await getRestaurantScope();
 
   return (
@@ -37,7 +45,7 @@ export default async function AppLayout({
               className="h-8 w-auto"
             />
           </Link>
-          <MainNav />
+          <MainNav isAdmin={agent?.role === "admin"} />
           <div className="ml-auto flex items-center gap-3">
             <RestaurantSwitcher
               restaurants={restaurants}

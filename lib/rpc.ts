@@ -1,4 +1,4 @@
-import type { DB } from "@/lib/queries";
+import type { DB, Member } from "@/lib/queries";
 
 export type CreateReservationInput = {
   restaurantId: string;
@@ -74,4 +74,51 @@ export async function cancelReservation(
 
   // RPC returns true on a fresh cancel, false if it was already cancelled.
   return { ok: true, alreadyCancelled: data === false };
+}
+
+export type MemberInput = {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string | null;
+};
+
+export type MemberResult =
+  | { ok: true; member: Member }
+  | { ok: false; message: string };
+
+/**
+ * Create a member via the create_member RPC. The RPC validates E.164, mints the
+ * NED- number, and maps a duplicate phone to a friendly message. Available to any
+ * authenticated agent (a host adding a walk-in guest), not admin-only.
+ */
+export async function createMember(
+  supabase: DB,
+  input: MemberInput,
+): Promise<MemberResult> {
+  const { data, error } = await supabase.rpc("create_member", {
+    p_first_name: input.firstName,
+    p_last_name: input.lastName,
+    p_phone: input.phone,
+    p_email: input.email ?? undefined,
+  });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, member: data as Member };
+}
+
+/** Update a member's name/phone/email via the update_member RPC. */
+export async function updateMember(
+  supabase: DB,
+  memberId: string,
+  input: MemberInput,
+): Promise<MemberResult> {
+  const { data, error } = await supabase.rpc("update_member", {
+    p_member_id: memberId,
+    p_first_name: input.firstName,
+    p_last_name: input.lastName,
+    p_phone: input.phone,
+    p_email: input.email ?? undefined,
+  });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, member: data as Member };
 }

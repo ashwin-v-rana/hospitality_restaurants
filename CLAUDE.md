@@ -313,7 +313,8 @@ app/
   (app)/page.tsx              # dashboard: today's snapshot for selected restaurant
   (app)/availability/page.tsx # date + party-size -> SlotGrid; Book action
   (app)/reservations/page.tsx # reservations for restaurant/date; Cancel action
-middleware.ts                 # refresh session; redirect unauthenticated -> /login
+proxy.ts                      # refresh session; redirect unauthenticated -> /login
+                              # (Next.js 16 renamed the `middleware` convention to `proxy`)
 lib/
   supabase/server.ts          # createServerClient (@supabase/ssr, cookies)
   supabase/client.ts          # createBrowserClient
@@ -329,7 +330,7 @@ components/
 ```
 
 **Flows**
-1. **Login** → Supabase Auth. On success, `middleware.ts` lets the agent in.
+1. **Login** → Supabase Auth. On success, `proxy.ts` lets the agent in.
 2. **Restaurant scope** → `RestaurantSwitcher` reads `restaurants` (RLS returns
    only assigned ones). Persist the selected restaurant in a URL param or
    cookie. Everything downstream filters by it.
@@ -361,6 +362,20 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key from Supabase project settings>
 Do **not** put the service-role key in the app. If a one-off admin script needs
 it, keep it in a server-only script outside the Next.js bundle.
 
+Both env vars are already set on the Vercel project (Production / Preview /
+Development). The login flow uses `signInWithPassword` (no OAuth / magic links),
+so **no Supabase redirect-URL configuration is needed**.
+
+---
+
+## 8a. Deployment (Vercel)
+
+- Deployed via **Vercel GitHub import** — the repo is connected to the Vercel
+  project under account `ashwin.rana@talkdesk.com` (`ashwinrana-4460`).
+- **Push to `main` → auto-deploy.** PRs get preview URLs automatically.
+- The repo receives commits from other authors too — **always
+  `git pull --rebase` before pushing** to avoid non-fast-forward rejections.
+
 ---
 
 ## 9. Seed the first agent login
@@ -391,7 +406,7 @@ npm install
 npx supabase login                 # if using the CLI for migrations/types
 npm run dev                        # local dev
 npm run build && npm run start     # prod build check
-npx vercel                         # deploy
+git push origin main               # deploy (Vercel auto-deploys from main)
 ```
 
 ---
@@ -401,7 +416,7 @@ npx vercel                         # deploy
 1. Scaffold Next.js + TS + Tailwind + shadcn/ui; wire `@supabase/ssr` clients.
 2. Apply the §5 migration; generate `lib/types.ts`.
 3. Seed one agent (§9) and (optional) roll slot dates forward (§4).
-4. `/login` + `middleware.ts` (route protection + session refresh).
+4. `/login` + `proxy.ts` (route protection + session refresh).
 5. App shell + `RestaurantSwitcher` (verify RLS scoping with two agents).
 6. `/availability` + `SlotGrid` (read-only first).
 7. `BookingDialog` + `create_reservation`; handle the 0-rows race.

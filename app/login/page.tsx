@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { login, type LoginState } from "@/app/auth-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,16 @@ import {
 } from "@/components/ui/card";
 
 const initialState: LoginState = { error: null };
+
+function InactiveNotice() {
+  const reason = useSearchParams().get("reason");
+  if (reason !== "inactive") return null;
+  return (
+    <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+      Your account has been deactivated. Contact an admin to regain access.
+    </p>
+  );
+}
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(login, initialState);
@@ -34,7 +45,10 @@ export default function LoginPage() {
           <CardTitle className="text-2xl">Reservations Console</CardTitle>
           <CardDescription>Sign in to manage table availability.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <Suspense fallback={null}>
+            <InactiveNotice />
+          </Suspense>
           <form action={formAction} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

@@ -13,11 +13,13 @@ function StatCard({
   value,
   hint,
   icon: Icon,
+  accent = "text-muted-foreground",
 }: {
   label: string;
   value: string | number;
   hint: string;
   icon: React.ComponentType<{ className?: string }>;
+  accent?: string;
 }) {
   return (
     <Card>
@@ -25,7 +27,7 @@ function StatCard({
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {label}
         </CardTitle>
-        <Icon className="size-4 text-muted-foreground" />
+        <Icon className={`size-4 ${accent}`} />
       </CardHeader>
       <CardContent>
         <div className="text-3xl font-semibold tabular-nums">{value}</div>
@@ -83,24 +85,28 @@ export default async function DashboardPage() {
           value={booked.length}
           hint="Active reservations"
           icon={BookMarked}
+          accent="text-emerald-600"
         />
         <StatCard
           label="Covers"
           value={covers}
           hint="Guests expected"
           icon={Users}
+          accent="text-sky-600"
         />
         <StatCard
           label="Seats open"
           value={seatsOpen}
           hint={`of ${seatsTotal} across ${slots.length} seatings`}
           icon={Armchair}
+          accent="text-amber-600"
         />
         <StatCard
           label="Seatings"
           value={slots.length}
           hint="Time slots today"
           icon={CalendarSearch}
+          accent="text-violet-600"
         />
       </div>
 

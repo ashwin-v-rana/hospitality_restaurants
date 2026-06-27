@@ -50,6 +50,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          is_active: boolean
           role: string
         }
         Insert: {
@@ -57,6 +58,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          is_active?: boolean
           role?: string
         }
         Update: {
@@ -64,6 +66,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          is_active?: boolean
           role?: string
         }
         Relationships: []
@@ -295,6 +298,44 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_assign_restaurant: {
+        Args: { p_agent_id: string; p_assign: boolean; p_restaurant_id: string }
+        Returns: boolean
+      }
+      admin_set_agent_active: {
+        Args: { p_active: boolean; p_agent_id: string }
+        Returns: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          is_active: boolean
+          role: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "agents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      admin_set_agent_role: {
+        Args: { p_agent_id: string; p_role: string }
+        Returns: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          is_active: boolean
+          role: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "agents"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       agent_has_restaurant: {
         Args: { p_restaurant_id: string }
         Returns: boolean
@@ -302,6 +343,29 @@ export type Database = {
       cancel_reservation: {
         Args: { p_reservation_id: string }
         Returns: boolean
+      }
+      create_member: {
+        Args: {
+          p_email?: string
+          p_first_name: string
+          p_last_name: string
+          p_phone: string
+        }
+        Returns: {
+          created_at: string | null
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          member_number: string
+          phone: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "members"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       create_reservation: {
         Args: {
@@ -320,7 +384,33 @@ export type Database = {
       }
       gen_cecconis_conf_code: { Args: never; Returns: string }
       gen_confirmation_code: { Args: { p_prefix: string }; Returns: string }
+      gen_ned_member_number: { Args: never; Returns: string }
+      is_admin: { Args: never; Returns: boolean }
       turn_minutes: { Args: { p_party: number }; Returns: number }
+      update_member: {
+        Args: {
+          p_email?: string
+          p_first_name: string
+          p_last_name: string
+          p_member_id: string
+          p_phone: string
+        }
+        Returns: {
+          created_at: string | null
+          email: string | null
+          first_name: string
+          id: string
+          last_name: string
+          member_number: string
+          phone: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "members"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
