@@ -23,18 +23,48 @@ console has to stay consistent with.
 
 ---
 
+## 0b. What's built (current state — as of 2026-06-27)
+
+A working, deployed console. Sections 1–13 below are the original spec; where
+they describe Supabase-Auth/RLS, the **§0 + §5 notes win**. Current reality:
+
+- **Routes:** `/login`, `/change-password`, `/` (dashboard), `/availability`,
+  `/reservations`, `/members`, `/activity` (Auth & Activity — read-only OTP
+  audit of `auth_events`), `/admin/agents` (admin-only), `/auth/signout` (cookie
+  clear). Shell = left **Sidebar** + **TopBar** (not the old top-header nav).
+- **Auth:** app-managed (bcrypt `agents.password_hash` + `jose` JWT cookie). No
+  Supabase Auth/GoTrue. `admin@` is forced to change password on first login.
+- **Security:** service-role-only DB (RLS on, zero policies, anon/authenticated
+  grants revoked, `SECURITY DEFINER` EXECUTE → `service_role` only). Authz in app
+  code (`lib/agent.ts`, `lib/authz.ts`). See §5.
+- **Members:** searchable directory; add/edit gated to manager/admin (hosts
+  read-only). **Agents:** full admin CRUD (add / edit / reset password / delete /
+  role / restaurant / active) with self-lockout guards.
+- **Design:** warm "Crestline" theme (cream/rust/pine/gold, Fraunces serif
+  headings + KPI numbers, `recharts` dashboard chart). Tokens in
+  `app/globals.css`; ported from the sibling `Crestline_partner_core` app.
+- **Demo logins:** `admin@ / alice@ / bob@ / carol@thened-demo.com`, password
+  `DemoPass123!` (admin = admin, others = host). Reset via `npm run seed:agents`.
+- **Deferred:** all-restaurant access (an "Assign all" button or admins
+  auto-spanning all restaurants) — revisit when a 2nd restaurant is added.
+
+---
+
 ## 1. Tech stack (locked decisions — do not substitute)
 
 - **Next.js** (App Router) + **TypeScript**
-- **Supabase** for Postgres, Auth (email/password), and RLS
-- **@supabase/supabase-js** + **@supabase/ssr** (cookie-based sessions; do NOT
-  use the deprecated auth-helpers)
-- **Tailwind CSS** + **shadcn/ui** for a clean, demo-grade host console
+- **Supabase** for Postgres + RLS (Postgres only — **auth is app-managed**, see
+  §0/§5; Supabase Auth/GoTrue is no longer used)
+- **App auth:** `jose` (HS256 JWT cookie) + `bcryptjs` (`agents.password_hash`)
+- **@supabase/supabase-js** with the **service-role** key, server-only
+  (`lib/supabase/admin.ts`)
+- **Tailwind CSS v4** + **shadcn/ui**; warm theme + **Fraunces**/Inter fonts;
+  **recharts** for the dashboard chart
 - **Vercel** for deployment
 
-The browser only ever uses the **anon** key under RLS. The **service-role key is
-never shipped to the client** and is not required by the app at runtime — every
-write goes through a `SECURITY DEFINER` RPC.
+The browser never connects to Supabase directly. All DB access is server-side
+via the **service-role** client; the key is **server-only** (never
+`NEXT_PUBLIC_*`). Required server env: `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`.
 
 ---
 
@@ -346,32 +376,43 @@ dropping anon reads should not affect it — but confirm before removing.
 
 ```
 app/
-  login/page.tsx              # email+password sign-in
-  (app)/layout.tsx            # auth-gated shell: header + RestaurantSwitcher
-  (app)/page.tsx              # dashboard: today's snapshot for selected restaurant
+  login/page.tsx              # app-managed sign-in (bcrypt verify -> JWT cookie)
+  change-password/page.tsx    # forced/voluntary password change
+  auth/signout/route.ts       # clears the session cookie (deactivated agents)
+  auth-actions.ts             # login / signOut / changePassword server actions
+  (app)/layout.tsx            # auth-gated shell: Sidebar + TopBar
+  (app)/page.tsx              # dashboard: KPI cards + covers chart + today's book
   (app)/availability/page.tsx # date + party-size -> SlotGrid; Book action
   (app)/reservations/page.tsx # reservations for restaurant/date; Cancel action
-proxy.ts                      # refresh session; redirect unauthenticated -> /login
-                              # (Next.js 16 renamed the `middleware` convention to `proxy`)
+  (app)/members/{page,actions}.tsx        # member directory + add/edit (mgr/admin)
+  (app)/activity/page.tsx     # Auth & Activity: read-only auth_events feed
+  (app)/admin/agents/{page,actions}.tsx   # admin-only agent CRUD
+proxy.ts                      # verify JWT cookie; gate routes; must_change redirect
 lib/
-  supabase/server.ts          # createServerClient (@supabase/ssr, cookies)
-  supabase/client.ts          # createBrowserClient
-  queries.ts                  # typed reads (restaurants, slots, reservations, members)
-  rpc.ts                      # createReservation(), cancelReservation()
-  types.ts                    # generated DB types
+  auth.ts                     # jose sign/verify session (edge-safe)
+  auth-server.ts              # bcryptjs hash/verify (Node only)
+  agent.ts                    # getCurrentAgent() from session + DB re-check
+  authz.ts                    # agentHasRestaurant / canManageMembers / isAdmin
+  supabase/admin.ts           # service-role client (server-only)
+  supabase/server.ts          # returns the service-role client
+  queries.ts, rpc.ts, types.ts, constants.ts
 components/
-  RestaurantSwitcher.tsx      # lists ONLY assigned restaurants (RLS-scoped)
-  SlotGrid.tsx                # time x capacity_remaining grid for a date
-  BookingDialog.tsx           # MemberCombobox + occasion/special_request -> RPC
-  MemberCombobox.tsx          # search members by name/number/phone
-  ReservationTable.tsx        # list + cancel
+  Sidebar.tsx, TopBar.tsx                  # app shell
+  KpiCard.tsx, CoversChart.tsx (recharts)  # dashboard
+  Avatar.tsx, EmptyState.tsx               # shared primitives
+  RestaurantSwitcher, SlotGrid, BookingDialog, MemberCombobox, ReservationTable
+  MembersManager, MemberDialog             # /members
+  AgentsManager                            # /admin/agents (add/edit/reset/delete)
+  ActivityFeed                             # /activity
 ```
 
 **Flows**
-1. **Login** → Supabase Auth. On success, `proxy.ts` lets the agent in.
-2. **Restaurant scope** → `RestaurantSwitcher` reads `restaurants` (RLS returns
-   only assigned ones). Persist the selected restaurant in a URL param or
-   cookie. Everything downstream filters by it.
+1. **Login** → app verifies bcrypt `agents.password_hash`, mints a JWT cookie.
+   `proxy.ts` verifies it (and holds must_change_password agents on
+   `/change-password`).
+2. **Restaurant scope** → `getRestaurantScope` scopes by the agent's
+   `agent_restaurants` links (RLS no longer does this). Selected restaurant
+   persists in a cookie. Everything downstream filters by it.
 3. **Availability** → query `time_slots` for `restaurant_id + slot_date`,
    ordered by `slot_time`, showing `capacity_remaining` per slot. Greyed when 0.
    "Book" opens `BookingDialog`.
