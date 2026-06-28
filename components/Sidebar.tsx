@@ -9,6 +9,7 @@ import {
   BookMarked,
   Users,
   ShieldCheck,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ const baseLinks = [
   { href: "/availability", label: "Availability", icon: CalendarSearch },
   { href: "/reservations", label: "Reservations", icon: BookMarked },
   { href: "/members", label: "Members", icon: Users },
+  { href: "/activity", label: "Auth & Activity", icon: Activity },
 ];
 
 export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {

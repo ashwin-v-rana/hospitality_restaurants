@@ -61,6 +61,30 @@ export function formatDate(slotDate: string): string {
   });
 }
 
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/**
+ * "MMM D, HH:MM UTC" from a stored timestamptz string. Parsed directly from the
+ * string (no Date/timezone) so server and client render identically — no
+ * hydration mismatch. auth_events.created_at is stored in UTC.
+ */
+export function formatEventTime(iso: string | null): string {
+  if (!iso) return "—";
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (!m) return iso;
+  const [, , mo, d, h, min] = m;
+  return `${MONTHS[Number(mo) - 1]} ${Number(d)}, ${h}:${min} UTC`;
+}
+
+/** True if an ISO timestamp falls within the last `hours` hours. */
+export function isWithinHours(iso: string | null, hours: number): boolean {
+  if (!iso) return false;
+  return Date.parse(iso) >= Date.now() - hours * 60 * 60 * 1000;
+}
+
 /** Local yyyy-mm-dd for "today" (used as the default availability date). */
 export function todayISO(): string {
   const now = new Date();

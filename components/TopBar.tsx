@@ -13,6 +13,7 @@ const TITLES: { match: (p: string) => boolean; title: string }[] = [
   { match: (p) => p.startsWith("/availability"), title: "Availability" },
   { match: (p) => p.startsWith("/reservations"), title: "Reservations" },
   { match: (p) => p.startsWith("/members"), title: "Members" },
+  { match: (p) => p.startsWith("/activity"), title: "Auth & Activity" },
   { match: (p) => p.startsWith("/admin/agents"), title: "Agents" },
 ];
 

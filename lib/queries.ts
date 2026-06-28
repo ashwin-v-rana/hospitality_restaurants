@@ -7,6 +7,7 @@ export type TimeSlot = Tables<"time_slots">;
 export type Member = Tables<"members">;
 export type Reservation = Tables<"reservations">;
 export type Agent = Tables<"agents">;
+export type AuthEvent = Tables<"auth_events">;
 
 export type DB = SupabaseClient<Database>;
 
@@ -171,6 +172,30 @@ export async function getMembers(
     .limit(limit);
   if (error) throw error;
   return (data ?? []) as MemberWithCount[];
+}
+
+export type AuthEventWithMember = AuthEvent & {
+  members: Pick<
+    Member,
+    "first_name" | "last_name" | "member_number" | "phone"
+  > | null;
+};
+
+/**
+ * OTP/auth telemetry written by the CXA AI agent, newest first, with member
+ * info. Read-only — the console never writes to auth_events (CLAUDE.md §3).
+ */
+export async function getAuthEvents(
+  supabase: DB,
+  limit = 500,
+): Promise<AuthEventWithMember[]> {
+  const { data, error } = await supabase
+    .from("auth_events")
+    .select("*, members(first_name, last_name, member_number, phone)")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as AuthEventWithMember[];
 }
 
 /** Search members by name, member number, or phone (case-insensitive). */
