@@ -144,6 +144,34 @@ the UI around a **restaurant switcher**, never a hardcoded restaurant.
 
 ## 5. Security model — what to build
 
+> **⚠️ SUPERSEDED — the current model is app-managed auth + a locked-down,
+> service-role-only database.** The original Supabase-Auth + RLS design below is
+> kept for historical context. What's actually live now:
+>
+> - **Auth is app-managed (no Supabase Auth/GoTrue).** Agents authenticate
+>   against a bcrypt `agents.password_hash`; the login mints a `jose` HS256 JWT
+>   session cookie (`lib/auth.ts`, `lib/auth-server.ts`). `proxy.ts` verifies it.
+> - **All server DB access uses the service-role client** (`lib/supabase/admin.ts`;
+>   `lib/supabase/server.ts` returns it). There is no per-request Supabase
+>   session and the browser never connects to Supabase directly.
+> - **The DB is locked to the service role.** RLS is **enabled on every table
+>   with zero policies** → deny-all for `anon`/`authenticated`; the service role
+>   bypasses RLS. `anon`/`authenticated` have had **all table/sequence/function
+>   privileges revoked**; `SECURITY DEFINER` function `EXECUTE` is granted only to
+>   `service_role`. (The `rls_enabled_no_policy` INFO advisory is the intended
+>   signature of this.)
+> - **Authorization is enforced in app code**, not RLS: `getCurrentAgent`
+>   (`lib/agent.ts`) + `lib/authz.ts` (`agentHasRestaurant` / `canManageMembers`
+>   / `isAdmin`), checked in every privileged server action.
+> - **Booking/member RPCs are retained** (`create_reservation`,
+>   `cancel_reservation`, `create_member`, `update_member`) for their atomic
+>   logic, but their internal `auth.uid()` checks were removed. `agents` no
+>   longer FKs `auth.users` (`id` defaults to `gen_random_uuid()`, `email` is
+>   unique). Server-only env: `SUPABASE_SERVICE_ROLE_KEY` + `JWT_SECRET`.
+> - **The CXA AI agent is unaffected** — it also uses the service role, which
+>   keeps `EXECUTE` on `gen_cecconis_conf_code()` (the `confirmation_code`
+>   default) and bypasses RLS.
+
 **Current state:** RLS on; only `anon_read_*` SELECT policies exist (anon reads
 everything, nothing writes from the browser). No staff auth, no agent→restaurant
 map, no write policies.
