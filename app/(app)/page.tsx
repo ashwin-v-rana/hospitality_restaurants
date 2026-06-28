@@ -5,37 +5,10 @@ import { getRestaurantScope } from "@/lib/selected-restaurant";
 import { getTimeSlots, getReservations } from "@/lib/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { KpiCard } from "@/components/KpiCard";
+import { CoversChart, type CoverPoint } from "@/components/CoversChart";
 import { ReservationTable } from "@/components/ReservationTable";
-import { todayISO, formatDate } from "@/lib/constants";
-
-function StatCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  accent = "text-muted-foreground",
-}: {
-  label: string;
-  value: string | number;
-  hint: string;
-  icon: React.ComponentType<{ className?: string }>;
-  accent?: string;
-}) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {label}
-        </CardTitle>
-        <Icon className={`size-4 ${accent}`} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-semibold tabular-nums">{value}</div>
-        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-      </CardContent>
-    </Card>
-  );
-}
+import { todayISO, formatDate, formatTime } from "@/lib/constants";
 
 export default async function DashboardPage() {
   const { selected } = await getRestaurantScope();
@@ -56,16 +29,23 @@ export default async function DashboardPage() {
   );
   const seatsTotal = slots.reduce((sum, s) => sum + s.capacity_total, 0);
 
+  // Covers grouped by seating time, for the chart.
+  const byTime = new Map<string, number>();
+  for (const r of booked) {
+    byTime.set(r.slot_time, (byTime.get(r.slot_time) ?? 0) + r.party_size);
+  }
+  const coverPoints: CoverPoint[] = [...byTime.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([time, c]) => ({ label: formatTime(time), covers: c }));
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h2 className="font-display text-3xl font-medium tracking-tight text-[var(--color-ink)]">
             {selected.name}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Today · {formatDate(today)}
-          </p>
+          </h2>
+          <p className="text-sm text-muted-foreground">Today · {formatDate(today)}</p>
         </div>
         <div className="flex gap-2">
           <Button render={<Link href="/availability" />} variant="outline">
@@ -80,38 +60,51 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
+        <KpiCard
           label="Booked today"
           value={booked.length}
           hint="Active reservations"
           icon={BookMarked}
-          accent="text-emerald-600"
+          accent="rust"
         />
-        <StatCard
+        <KpiCard
           label="Covers"
           value={covers}
           hint="Guests expected"
           icon={Users}
-          accent="text-sky-600"
+          accent="pine"
         />
-        <StatCard
+        <KpiCard
           label="Seats open"
           value={seatsOpen}
           hint={`of ${seatsTotal} across ${slots.length} seatings`}
           icon={Armchair}
-          accent="text-amber-600"
+          accent="amber"
         />
-        <StatCard
+        <KpiCard
           label="Seatings"
           value={slots.length}
           hint="Time slots today"
           icon={CalendarSearch}
-          accent="text-violet-600"
+          accent="gold"
         />
       </div>
 
+      <Card className="rounded-2xl">
+        <CardHeader>
+          <CardTitle className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+            Covers by seating
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CoversChart data={coverPoints} />
+        </CardContent>
+      </Card>
+
       <div className="space-y-3">
-        <h2 className="text-lg font-medium">Today&apos;s book</h2>
+        <h3 className="font-display text-xl font-medium text-[var(--color-ink)]">
+          Today&apos;s book
+        </h3>
         <ReservationTable reservations={reservations} />
       </div>
     </div>

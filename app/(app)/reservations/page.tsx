@@ -37,7 +37,9 @@ export default async function ReservationsPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Reservations</h1>
+          <h2 className="font-display text-3xl font-medium tracking-tight text-[var(--color-ink)]">
+            Reservations
+          </h2>
           <p className="text-sm text-muted-foreground">
             {selected.name} · {scope} · {booked} booked · {covers} cover
             {covers === 1 ? "" : "s"}

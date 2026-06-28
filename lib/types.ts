@@ -60,7 +60,7 @@ export type Database = {
           created_at?: string | null
           email: string
           full_name?: string | null
-          id: string
+          id?: string
           is_active?: boolean
           last_login_at?: string | null
           must_change_password?: boolean

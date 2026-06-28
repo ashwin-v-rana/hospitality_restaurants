@@ -42,7 +42,9 @@ export default function LoginPage() {
             priority
             className="mx-auto h-16 w-auto"
           />
-          <CardTitle className="text-2xl">Reservations Console</CardTitle>
+          <CardTitle className="font-display text-2xl font-medium">
+            Reservations Console
+          </CardTitle>
           <CardDescription>Sign in to manage table availability.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

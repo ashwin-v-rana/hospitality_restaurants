@@ -45,7 +45,9 @@ export default async function AvailabilityPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Availability</h1>
+          <h2 className="font-display text-3xl font-medium tracking-tight text-[var(--color-ink)]">
+            Availability
+          </h2>
           <p className="text-sm text-muted-foreground">
             {selected.name} · {formatDate(date)}
             {dayWindows.length > 0 ? (

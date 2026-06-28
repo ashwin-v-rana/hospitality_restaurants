@@ -17,7 +17,9 @@ export default async function MembersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Members</h1>
+        <h2 className="font-display text-3xl font-medium tracking-tight text-[var(--color-ink)]">
+          Members
+        </h2>
         <p className="text-sm text-muted-foreground">
           {canManage
             ? "Search, add, and edit members. Bookings stay attached to their NED- number."

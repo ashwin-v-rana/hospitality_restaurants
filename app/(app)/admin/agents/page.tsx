@@ -18,10 +18,12 @@ export default async function AdminAgentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Agents</h1>
+        <h2 className="font-display text-3xl font-medium tracking-tight text-[var(--color-ink)]">
+          Agents
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Manage roles, restaurant access, and active status. New accounts are
-          created with the seed script.
+          Add agents, manage roles, restaurant access, passwords, and active
+          status.
         </p>
       </div>
       <AgentsManager

@@ -37,7 +37,9 @@ export default function ChangePasswordPage() {
             priority
             className="mx-auto h-16 w-auto"
           />
-          <CardTitle className="text-2xl">Set a new password</CardTitle>
+          <CardTitle className="font-display text-2xl font-medium">
+            Set a new password
+          </CardTitle>
           <CardDescription>
             Choose a new password to continue to the console.
           </CardDescription>
