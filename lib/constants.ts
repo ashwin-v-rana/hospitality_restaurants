@@ -16,8 +16,10 @@ export const MIN_PARTY_SIZE = 1;
 export const ENFORCE_LEAD_TIME = false;
 export const LEAD_TIME_MINUTES = 30;
 
-/** E.164 — must match the members.phone CHECK constraint. */
-export const E164_REGEX = /^\+[1-9]\d{10,14}$/;
+/** E.164 — must match the members.phone CHECK constraint. 7–15 total digits
+ *  after the "+" (min lowered from 11 so short national numbers such as Nordic
+ *  8-digit numbers behind +45/+47 are accepted). See migration 0002. */
+export const E164_REGEX = /^\+[1-9]\d{6,14}$/;
 
 /** turn_minutes by party size: ≤2 → 90; ≤4 → 120; 5–6 → 150. */
 export function turnMinutes(partySize: number): number {

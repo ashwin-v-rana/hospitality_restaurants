@@ -136,7 +136,7 @@ export function MemberDialog({
             />
             <p className="text-xs text-muted-foreground">
               E.164 format — include the country code with{" "}
-              <span className="font-mono">+</span>. 11–15 digits.
+              <span className="font-mono">+</span>. 7–15 digits.
             </p>
           </div>
 
