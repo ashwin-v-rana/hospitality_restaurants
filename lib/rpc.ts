@@ -106,6 +106,39 @@ export async function createMember(
   return { ok: true, member: data as Member };
 }
 
+export type GenerateSlotsInput = {
+  restaurantId: string;
+  startDate: string;
+  endDate: string;
+  capacity: number;
+};
+
+export type GenerateSlotsResult =
+  | { ok: true; inserted: number }
+  | { ok: false; message: string };
+
+/**
+ * Generate bookable time_slots for a restaurant across a date range via the
+ * generate_time_slots RPC. The RPC steps by the restaurant's
+ * slot_interval_minutes within each weekday's service window and inserts with
+ * ON CONFLICT DO NOTHING, so it only *adds* missing slots — existing slots
+ * (and any bookings against them) are never touched or oversold. Returns the
+ * number of slots actually inserted.
+ */
+export async function generateTimeSlots(
+  supabase: DB,
+  input: GenerateSlotsInput,
+): Promise<GenerateSlotsResult> {
+  const { data, error } = await supabase.rpc("generate_time_slots", {
+    p_restaurant_id: input.restaurantId,
+    p_start_date: input.startDate,
+    p_end_date: input.endDate,
+    p_capacity: input.capacity,
+  });
+  if (error) return { ok: false, message: error.message };
+  return { ok: true, inserted: data ?? 0 };
+}
+
 /** Update a member's name/phone/email via the update_member RPC. */
 export async function updateMember(
   supabase: DB,

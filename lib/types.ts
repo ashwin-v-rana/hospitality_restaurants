@@ -401,6 +401,15 @@ export type Database = {
       gen_cecconis_conf_code: { Args: never; Returns: string }
       gen_confirmation_code: { Args: { p_prefix: string }; Returns: string }
       gen_ned_member_number: { Args: never; Returns: string }
+      generate_time_slots: {
+        Args: {
+          p_capacity?: number
+          p_end_date: string
+          p_restaurant_id: string
+          p_start_date: string
+        }
+        Returns: number
+      }
       is_admin: { Args: never; Returns: boolean }
       turn_minutes: { Args: { p_party: number }; Returns: number }
       update_member: {

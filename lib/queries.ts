@@ -105,6 +105,54 @@ export async function getTimeSlots(
   return data ?? [];
 }
 
+export type SlotInventory = {
+  lastSlotDate: string | null;
+  futureSlots: number;
+  futureBookable: number;
+};
+
+/**
+ * Snapshot of a restaurant's slot inventory from `fromDate` onward: the latest
+ * slot date on the book, and how many upcoming slots exist / are still bookable.
+ * Powers the admin slot generator's "current coverage" panel and its
+ * "extend from last slot" default.
+ */
+export async function getSlotInventory(
+  supabase: DB,
+  restaurantId: string,
+  fromDate: string,
+): Promise<SlotInventory> {
+  const { data: lastRow, error: lastErr } = await supabase
+    .from("time_slots")
+    .select("slot_date")
+    .eq("restaurant_id", restaurantId)
+    .order("slot_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (lastErr) throw lastErr;
+
+  const { count: futureSlots, error: fErr } = await supabase
+    .from("time_slots")
+    .select("*", { count: "exact", head: true })
+    .eq("restaurant_id", restaurantId)
+    .gte("slot_date", fromDate);
+  if (fErr) throw fErr;
+
+  const { count: futureBookable, error: bErr } = await supabase
+    .from("time_slots")
+    .select("*", { count: "exact", head: true })
+    .eq("restaurant_id", restaurantId)
+    .gte("slot_date", fromDate)
+    .gt("capacity_remaining", 0);
+  if (bErr) throw bErr;
+
+  return {
+    lastSlotDate: lastRow?.slot_date ?? null,
+    futureSlots: futureSlots ?? 0,
+    futureBookable: futureBookable ?? 0,
+  };
+}
+
 export type ReservationWithMember = Reservation & {
   members: Pick<
     Member,

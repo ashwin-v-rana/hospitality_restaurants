@@ -10,6 +10,7 @@ import {
   Users,
   ShieldCheck,
   Activity,
+  CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,11 +22,13 @@ const baseLinks = [
   { href: "/activity", label: "Auth & Activity", icon: Activity },
 ];
 
+const adminLinks = [
+  { href: "/admin/agents", label: "Agents", icon: ShieldCheck },
+  { href: "/admin/slots", label: "Slots", icon: CalendarClock },
+];
+
 export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
-  const links = isAdmin
-    ? [...baseLinks, { href: "/admin/agents", label: "Agents", icon: ShieldCheck }]
-    : baseLinks;
 
   return (
     <aside className="sticky top-0 z-20 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-[var(--sidebar)] backdrop-blur-xl md:flex">
@@ -46,25 +49,20 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
       </div>
 
       <nav className="flex flex-1 flex-col gap-0.5 py-3">
-        {links.map(({ href, label, icon: Icon }) => {
-          const active =
-            href === "/" ? pathname === "/" : pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 border-l-[3px] px-5 py-2.5 text-sm transition-colors",
-                active
-                  ? "border-primary bg-gradient-to-r from-primary/12 to-transparent font-semibold text-[var(--accent-deep)]"
-                  : "border-transparent font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-              )}
-            >
-              <Icon className="size-[18px]" />
-              {label}
-            </Link>
-          );
-        })}
+        {baseLinks.map((link) => (
+          <NavLink key={link.href} {...link} pathname={pathname} />
+        ))}
+
+        {isAdmin ? (
+          <>
+            <p className="mt-4 px-5 pb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground/70">
+              Admin
+            </p>
+            {adminLinks.map((link) => (
+              <NavLink key={link.href} {...link} pathname={pathname} />
+            ))}
+          </>
+        ) : null}
       </nav>
 
       <div className="border-t border-border px-5 py-3.5">
@@ -76,5 +74,33 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
         </div>
       </div>
     </aside>
+  );
+}
+
+function NavLink({
+  href,
+  label,
+  icon: Icon,
+  pathname,
+}: {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  pathname: string;
+}) {
+  const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex items-center gap-3 border-l-[3px] px-5 py-2.5 text-sm transition-colors",
+        active
+          ? "border-primary bg-gradient-to-r from-primary/12 to-transparent font-semibold text-[var(--accent-deep)]"
+          : "border-transparent font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+      )}
+    >
+      <Icon className="size-[18px]" />
+      {label}
+    </Link>
   );
 }
