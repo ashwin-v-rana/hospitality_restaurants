@@ -23,15 +23,17 @@ console has to stay consistent with.
 
 ---
 
-## 0b. What's built (current state — as of 2026-06-27)
+## 0b. What's built (current state — as of 2026-07-08)
 
 A working, deployed console. Sections 1–13 below are the original spec; where
 they describe Supabase-Auth/RLS, the **§0 + §5 notes win**. Current reality:
 
 - **Routes:** `/login`, `/change-password`, `/` (dashboard), `/availability`,
   `/reservations`, `/members`, `/activity` (Auth & Activity — read-only OTP
-  audit of `auth_events`), `/admin/agents` (admin-only), `/auth/signout` (cookie
-  clear). Shell = left **Sidebar** + **TopBar** (not the old top-header nav).
+  audit of `auth_events`), `/admin/agents` and `/admin/slots` (admin-only),
+  `/auth/signout` (cookie clear). Shell = left **Sidebar** + **TopBar** (not the
+  old top-header nav). Admin routes sit under a grouped **Admin** sidebar section
+  rendered only when `role === 'admin'`.
 - **Auth:** app-managed (bcrypt `agents.password_hash` + `jose` JWT cookie). No
   Supabase Auth/GoTrue. `admin@` is forced to change password on first login.
 - **Security:** service-role-only DB (RLS on, zero policies, anon/authenticated
@@ -40,6 +42,13 @@ they describe Supabase-Auth/RLS, the **§0 + §5 notes win**. Current reality:
 - **Members:** searchable directory; add/edit gated to manager/admin (hosts
   read-only). **Agents:** full admin CRUD (add / edit / reset password / delete /
   role / restaurant / active) with self-lockout guards.
+- **Slots (`/admin/slots`):** admin tool to open bookable availability without
+  hand-running SQL. Calls the `generate_time_slots` RPC (migration 0003), which
+  steps each weekday's `service_windows` on the restaurant's 15-min grid and
+  inserts `time_slots` with `ON CONFLICT DO NOTHING` — idempotent, never resets
+  `capacity_remaining` or oversells existing bookings. UI: current-coverage
+  panel, one-click **"Open next 14 days"**, and a future-dates-only range form.
+  This is the self-serve replacement for the manual slot roll-forward in §4.
 - **Design:** warm "Crestline" theme (cream/rust/pine/gold, Fraunces serif
   headings + KPI numbers, `recharts` dashboard chart). Tokens in
   `app/globals.css`; ported from the sibling `Crestline_partner_core` app.
@@ -150,10 +159,17 @@ OTP/auth telemetry for the AI agent (`event_type` `auth_success|auth_failed`,
   large_party_phone `+442079460123`.
 - 27 members, 714 time_slots, 12 reservations (11 booked / 1 cancelled), 7
   service windows.
-- **⚠️ Seeded slots run `2026-06-09` → `2026-06-22`, which is in the past.** The
-  availability screen will look empty for "today/future". Before any live demo,
-  roll the slot window (and matching reservations) forward by the same delta so
-  the data stays internally consistent. Optional prep migration:
+- **⚠️ Seeded slots age out.** They were seeded `2026-06-09` → `2026-06-22`
+  (later rolled forward), so future windows lapse as the calendar advances and
+  the availability screen looks empty for "today/future".
+  - **Preferred fix (self-serve):** log in as an admin and use **`/admin/slots`
+    → "Open next 14 days"** to generate fresh future slots (idempotent; won't
+    disturb existing bookings). See §0b.
+  - **Note:** the admin generator only *adds* future slots — it does **not**
+    shift the existing (past) reservations forward. For a demo that needs the
+    seeded *reservations* to appear on future dates too, use the roll-forward
+    below, which moves slots **and** their reservations by the same delta so
+    they stay aligned:
 
   ```sql
   -- Shift slots + reservations so the latest slot_date lands ~2 weeks out.
@@ -198,6 +214,9 @@ the UI around a **restaurant switcher**, never a hardcoded restaurant.
 >   logic, but their internal `auth.uid()` checks were removed. `agents` no
 >   longer FKs `auth.users` (`id` defaults to `gen_random_uuid()`, `email` is
 >   unique). Server-only env: `SUPABASE_SERVICE_ROLE_KEY` + `JWT_SECRET`.
+>   The admin slot generator adds a `generate_time_slots` RPC (migration 0003,
+>   `service_role`-only) — admin + restaurant-scope are re-checked in the
+>   `/admin/slots` server action (see §0b, §4).
 > - **The CXA AI agent is unaffected** — it also uses the service role, which
 >   keeps `EXECUTE` on `gen_cecconis_conf_code()` (the `confirmation_code`
 >   default) and bypasses RLS.
@@ -387,6 +406,7 @@ app/
   (app)/members/{page,actions}.tsx        # member directory + add/edit (mgr/admin)
   (app)/activity/page.tsx     # Auth & Activity: read-only auth_events feed
   (app)/admin/agents/{page,actions}.tsx   # admin-only agent CRUD
+  (app)/admin/slots/{page,actions}.tsx    # admin-only slot generator (generate_time_slots RPC)
 proxy.ts                      # verify JWT cookie; gate routes; must_change redirect
 lib/
   auth.ts                     # jose sign/verify session (edge-safe)
@@ -403,6 +423,7 @@ components/
   RestaurantSwitcher, SlotGrid, BookingDialog, MemberCombobox, ReservationTable
   MembersManager, MemberDialog             # /members
   AgentsManager                            # /admin/agents (add/edit/reset/delete)
+  SlotsManager                             # /admin/slots (generate/extend availability)
   ActivityFeed                             # /activity
 ```
 
