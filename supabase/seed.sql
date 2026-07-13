@@ -1,4 +1,4 @@
--- The Ned — Booking System: seed data (Cecconi's at The Ned London)
+-- The Wren — Booking System: seed data (Cecconi's at The Wren London)
 --
 -- Idempotent: truncates the demo tables and regenerates everything. Safe to
 -- re-run any time to refresh the rolling 14-day availability window.
@@ -74,7 +74,7 @@ begin
 
   -- ----- restaurant (one row; fixed UUID so prompts/README can hardcode) -----
   insert into public.restaurants (id, slug, name, large_party_phone, slot_interval_minutes)
-  values (c_restaurant_id, 'cecconis', 'Cecconi''s at The Ned London', c_large_party_ph, c_slot_min);
+  values (c_restaurant_id, 'cecconis', 'Cecconi''s at The Wren London', c_large_party_ph, c_slot_min);
 
   -- ----- service_windows: mirror `_hours` (one all-day window per weekday) -----
   insert into public.service_windows (restaurant_id, day_of_week, service_name, open_time, close_time)
@@ -83,24 +83,24 @@ begin
 
   -- ----- members (London-local names, Ofcom fictional mobiles) -----
   insert into public.members (member_number, first_name, last_name, phone, email) values
-    ('NED-100482','Olivia','Whitfield','+447700900112','olivia.whitfield@member.thened-demo.com'),
-    ('NED-100485','James','Okafor','+447700900145','james.okafor@member.thened-demo.com'),
-    ('NED-100488','Priya','Nair','+447700900167','priya.nair@member.thened-demo.com'),
-    ('NED-100491','Thomas','Ashworth','+447700900189','thomas.ashworth@member.thened-demo.com'),
-    ('NED-100494','Sofia','Marchetti','+447700900201','sofia.marchetti@member.thened-demo.com'),
-    ('NED-100497','Daniel','Fitzgerald','+447700900223','daniel.fitzgerald@member.thened-demo.com'),
-    ('NED-100500','Amara','Bello','+447700900245','amara.bello@member.thened-demo.com'),
-    ('NED-100503','Henry','Sinclair','+447700900267','henry.sinclair@member.thened-demo.com'),
-    ('NED-100506','Mei Lin','Chow','+447700900289','meilin.chow@member.thened-demo.com'),
-    ('NED-100509','Oliver','Bennett','+447700900301','oliver.bennett@member.thened-demo.com'),
-    ('NED-100512','Charlotte','Hughes','+447700900323','charlotte.hughes@member.thened-demo.com'),
-    ('NED-100515','Raj','Patel','+447700900345','raj.patel@member.thened-demo.com'),
-    ('NED-100518','Emily','Thornton','+447700900367','emily.thornton@member.thened-demo.com'),
-    ('NED-100521','Lucas','Romano','+447700900389','lucas.romano@member.thened-demo.com'),
-    ('NED-100524','Grace','Adeyemi','+447700900401','grace.adeyemi@member.thened-demo.com'),
-    ('NED-100527','William','Hartley','+447700900423','william.hartley@member.thened-demo.com'),
-    ('NED-100530','Isabella','Ferreira','+447700900445','isabella.ferreira@member.thened-demo.com'),
-    ('NED-100533','Samuel','Greenwood','+447700900467','samuel.greenwood@member.thened-demo.com');
+    ('NED-100482','Olivia','Whitfield','+447700900112','olivia.whitfield@member.thewren-demo.com'),
+    ('NED-100485','James','Okafor','+447700900145','james.okafor@member.thewren-demo.com'),
+    ('NED-100488','Priya','Nair','+447700900167','priya.nair@member.thewren-demo.com'),
+    ('NED-100491','Thomas','Ashworth','+447700900189','thomas.ashworth@member.thewren-demo.com'),
+    ('NED-100494','Sofia','Marchetti','+447700900201','sofia.marchetti@member.thewren-demo.com'),
+    ('NED-100497','Daniel','Fitzgerald','+447700900223','daniel.fitzgerald@member.thewren-demo.com'),
+    ('NED-100500','Amara','Bello','+447700900245','amara.bello@member.thewren-demo.com'),
+    ('NED-100503','Henry','Sinclair','+447700900267','henry.sinclair@member.thewren-demo.com'),
+    ('NED-100506','Mei Lin','Chow','+447700900289','meilin.chow@member.thewren-demo.com'),
+    ('NED-100509','Oliver','Bennett','+447700900301','oliver.bennett@member.thewren-demo.com'),
+    ('NED-100512','Charlotte','Hughes','+447700900323','charlotte.hughes@member.thewren-demo.com'),
+    ('NED-100515','Raj','Patel','+447700900345','raj.patel@member.thewren-demo.com'),
+    ('NED-100518','Emily','Thornton','+447700900367','emily.thornton@member.thewren-demo.com'),
+    ('NED-100521','Lucas','Romano','+447700900389','lucas.romano@member.thewren-demo.com'),
+    ('NED-100524','Grace','Adeyemi','+447700900401','grace.adeyemi@member.thewren-demo.com'),
+    ('NED-100527','William','Hartley','+447700900423','william.hartley@member.thewren-demo.com'),
+    ('NED-100530','Isabella','Ferreira','+447700900445','isabella.ferreira@member.thewren-demo.com'),
+    ('NED-100533','Samuel','Greenwood','+447700900467','samuel.greenwood@member.thewren-demo.com');
 
   -- ----- time_slots: for each of the next c_days days, generate 15-min slots -----
   -- from that weekday's first_seating through last_seating INCLUSIVE. Slots are

@@ -30,8 +30,8 @@ export default function ChangePasswordPage() {
       <Card className="w-full max-w-sm shadow-sm">
         <CardHeader className="space-y-3 text-center">
           <Image
-            src="/thened-cecconis-logo.svg"
-            alt="The Ned — Cecconi's"
+            src="/thewren-cecconis-logo.svg"
+            alt="The Wren — Cecconi's"
             width={194}
             height={74}
             priority

@@ -67,10 +67,10 @@ type Demo = {
 // may live in a public README. Only the admin can write members / manage agents,
 // and the admin is forced to change its password on first login.
 const DEMO_AGENTS: Demo[] = [
-  { email: "admin@thened-demo.com", fullName: "Avery Stone", role: "admin", mustChange: true },
-  { email: "alice@thened-demo.com", fullName: "Alice Hart", role: "host", mustChange: false },
-  { email: "bob@thened-demo.com", fullName: "Bob Mensah", role: "host", mustChange: false },
-  { email: "carol@thened-demo.com", fullName: "Carol Nguyen", role: "host", mustChange: false },
+  { email: "admin@thewren-demo.com", fullName: "Avery Stone", role: "admin", mustChange: true },
+  { email: "alice@thewren-demo.com", fullName: "Alice Hart", role: "host", mustChange: false },
+  { email: "bob@thewren-demo.com", fullName: "Bob Mensah", role: "host", mustChange: false },
+  { email: "carol@thewren-demo.com", fullName: "Carol Nguyen", role: "host", mustChange: false },
 ];
 
 const admin = createClient(URL, SERVICE_KEY, {
@@ -118,7 +118,7 @@ async function main() {
 
   console.log(
     `\nDone. Demo agents use the password: ${PASSWORD}\n` +
-      "admin@thened-demo.com must change it on first login.",
+      "admin@thewren-demo.com must change it on first login.",
   );
 }
 

@@ -23,8 +23,8 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "The Ned — Reservations Console",
-  description: "Host console for table availability and bookings at The Ned.",
+  title: "The Wren — Reservations Console",
+  description: "Host console for table availability and bookings at The Wren.",
 };
 
 export default function RootLayout({

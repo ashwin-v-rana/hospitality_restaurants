@@ -35,8 +35,8 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm shadow-sm">
         <CardHeader className="space-y-3 text-center">
           <Image
-            src="/thened-cecconis-logo.svg"
-            alt="The Ned — Cecconi's"
+            src="/thewren-cecconis-logo.svg"
+            alt="The Wren — Cecconi's"
             width={194}
             height={74}
             priority
@@ -59,7 +59,7 @@ export default function LoginPage() {
                 name="email"
                 type="email"
                 autoComplete="email"
-                placeholder="host@thened-demo.com"
+                placeholder="host@thewren-demo.com"
                 required
               />
             </div>

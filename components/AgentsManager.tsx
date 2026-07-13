@@ -308,7 +308,7 @@ function AddAgentDialog({
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="new.host@thened-demo.com"
+              placeholder="new.host@thewren-demo.com"
             />
           </div>
           <div className="space-y-2">

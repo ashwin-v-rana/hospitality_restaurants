@@ -1,4 +1,4 @@
-# CLAUDE.md — The Ned Reservations Console
+# CLAUDE.md — The Wren Reservations Console
 
 A staff-facing web app (an OpenTable-style host console) for checking table
 availability and managing reservations across one or more restaurants. Human
@@ -6,7 +6,7 @@ availability and managing reservations across one or more restaurants. Human
 to, check availability for a date + party size, and create or cancel bookings.
 
 This console is the **human counterpart to an existing CXA AI agent**
-("The_Ned_Restaurants" / Cecconi Concierge). Both surfaces read and write the
+("The_Wren_Restaurants" / Cecconi Concierge). Both surfaces read and write the
 **same Supabase tables**, so they must obey identical business rules and the same
 atomic booking pattern. Treat the AI agent's behaviour as the contract this
 console has to stay consistent with.
@@ -52,7 +52,7 @@ they describe Supabase-Auth/RLS, the **§0 + §5 notes win**. Current reality:
 - **Design:** warm "Crestline" theme (cream/rust/pine/gold, Fraunces serif
   headings + KPI numbers, `recharts` dashboard chart). Tokens in
   `app/globals.css`; ported from the sibling `Crestline_partner_core` app.
-- **Demo logins:** `admin@ / alice@ / bob@ / carol@thened-demo.com`, password
+- **Demo logins:** `admin@ / alice@ / bob@ / carol@thewren-demo.com`, password
   `DemoPass123!` (admin = admin, others = host). Reset via `npm run seed:agents`.
 - **Deferred:** all-restaurant access (an "Assign all" button or admins
   auto-spanning all restaurants) — revisit when a 2nd restaurant is added.
@@ -154,7 +154,7 @@ OTP/auth telemetry for the AI agent (`event_type` `auth_success|auth_failed`,
 
 ## 4. Live data snapshot & the demo-date caveat
 
-- 1 restaurant: **Cecconi's at The Ned London**, id
+- 1 restaurant: **Cecconi's at The Wren London**, id
   `cec0cec0-0000-4000-8000-000000000001`, slug `cecconis`,
   large_party_phone `+442079460123`.
 - 27 members, 714 time_slots, 12 reservations (11 booked / 1 cancelled), 7
@@ -494,7 +494,7 @@ Supabase Auth has 0 users. After the §5 migration:
 2. Link the profile + restaurant access (replace the UUID):
    ```sql
    insert into public.agents (id, email, full_name, role)
-   values ('<auth-user-uuid>', 'host@thened-demo.com', 'Demo Host', 'manager');
+   values ('<auth-user-uuid>', 'host@thewren-demo.com', 'Demo Host', 'manager');
 
    insert into public.agent_restaurants (agent_id, restaurant_id)
    values ('<auth-user-uuid>', 'cec0cec0-0000-4000-8000-000000000001');
@@ -551,7 +551,7 @@ git push origin main               # deploy (Vercel auto-deploys from main)
 
 ## 13. Relationship to the CXA AI agent (reference only)
 
-The "The_Ned_Restaurants" agent system (Cecconi Concierge supervisor + Auth,
+The "The_Wren_Restaurants" agent system (Cecconi Concierge supervisor + Auth,
 Booking, Reservation Management, Escalation sub-agents) books against these exact
 tables using a service-role `execute_sql` tool and the same atomic
 decrement-and-insert CTE this console's `create_reservation` RPC reproduces.

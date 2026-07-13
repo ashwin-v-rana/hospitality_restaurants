@@ -1,4 +1,4 @@
--- The Ned — Booking System: schema (Cecconi's at The Ned London)
+-- The Wren — Booking System: schema (Cecconi's at The Wren London)
 --
 -- A Talkdesk Multi-Agent system queries these tables directly via the
 -- Supabase `execute_sql` MCP tool. There is no backend/API layer yet.

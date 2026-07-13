@@ -33,10 +33,10 @@ export function Sidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   return (
     <aside className="sticky top-0 z-20 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-[var(--sidebar)] backdrop-blur-xl md:flex">
       <div className="border-b border-border px-5 pb-5 pt-5">
-        <Link href="/" aria-label="The Ned — Cecconi's home" className="block">
+        <Link href="/" aria-label="The Wren — Cecconi's home" className="block">
           <Image
-            src="/thened-cecconis-logo.svg"
-            alt="The Ned — Cecconi's"
+            src="/thewren-cecconis-logo.svg"
+            alt="The Wren — Cecconi's"
             width={194}
             height={74}
             priority

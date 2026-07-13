@@ -1,4 +1,4 @@
--- The Ned — add real demo accounts (standalone, re-runnable)
+-- The Wren — add real demo accounts (standalone, re-runnable)
 --
 -- Paste into the Supabase SQL editor (or run via the MCP `execute_sql` tool).
 -- Kept SEPARATE from seed.sql on purpose: these are real people.
