@@ -1,8 +1,10 @@
 # The Restaurant — Reservation System (Talkdesk Multi-Agent)
 
+> **Note: "The Restaurant" is a fictional venue created for demo and testing purposes only. Any resemblance to real restaurants, members, or businesses is coincidental.**
+
 A **Talkdesk Multi-Agent AI System** for table reservations, plus the Supabase
-(Postgres) database it runs on. End customer: **The Restaurant** (a members-only
-venue). **Scope: a single restaurant location.** Voice + chat.
+(Postgres) database it runs on. End customer: **The Restaurant** (a fictional
+members-only venue). **Scope: a single restaurant location.** Voice + chat.
 
 The agents query Supabase **directly** via the `execute_sql` MCP tool. Email and
 SMS go through MCP/workflow tools (see *Tools & infrastructure*). There is no
