@@ -478,7 +478,12 @@ so **no Supabase redirect-URL configuration is needed**.
 ## 8a. Deployment (Vercel)
 
 - Deployed via **Vercel GitHub import** — the repo is connected to the Vercel
-  project under account `ashwin.rana@talkdesk.com` (`ashwinrana-4460`).
+  project `hospitality-restaurants` in team **Talkdesk_Partner_Projects**
+  (`talkdesk-partner-projects`), owned by `ashwinvrana@gmail.com` (sole member).
+  Sibling project `wren-front-desk-console` lives in the same team.
+- **Vercel CLI:** always use the Gmail profile —
+  `vercel -Q ~/.config/vercel-wren … --scope talkdesk-partner-projects`. A local
+  Claude Code hook (`.claude/settings.local.json`) blocks `vercel` without it.
 - **Push to `main` → auto-deploy.** PRs get preview URLs automatically.
 - The repo receives commits from other authors too — **always
   `git pull --rebase` before pushing** to avoid non-fast-forward rejections.
