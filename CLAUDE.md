@@ -562,3 +562,11 @@ tables using a service-role `execute_sql` tool and the same atomic
 decrement-and-insert CTE this console's `create_reservation` RPC reproduces.
 Keeping the rules in §6 identical is what lets the voice agent and this host
 console share one source of truth without overselling.
+
+**Live agent system (as of 2026-10-18):** `Wren_Restaurants_GOLDEN_TEMPLATE`,
+`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`, **version 3**
+(DRAFT; v2 is PUBLISHED_SELECTED). The original `The_Wren_Restaurants` system
+(`98c52e5f…`) was deleted. `The_Restaurants_ai-agent-system_US.json` is a local
+export of v3 — editing it does not deploy; read/write via the Talkdesk
+multi-agent API (`GET .../agent-system/39ab2b71…/3`, `PUT` to the collection
+endpoint with `account_id` in the body).
