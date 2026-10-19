@@ -23,3 +23,6 @@ supabase/.temp/
 next-env.d.ts
 /coverage
 .vercel
+
+# Talkdesk agent-system backups (scripts/talkdesk/put.mjs)
+scripts/talkdesk/.backups/

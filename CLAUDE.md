@@ -563,10 +563,31 @@ decrement-and-insert CTE this console's `create_reservation` RPC reproduces.
 Keeping the rules in §6 identical is what lets the voice agent and this host
 console share one source of truth without overselling.
 
-**Live agent system (as of 2026-10-18):** `Wren_Restaurants_GOLDEN_TEMPLATE`,
-`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`, **version 3**
-(DRAFT; v2 is PUBLISHED_SELECTED). The original `The_Wren_Restaurants` system
-(`98c52e5f…`) was deleted. `The_Restaurants_ai-agent-system_US.json` is a local
-export of v3 — editing it does not deploy; read/write via the Talkdesk
-multi-agent API (`GET .../agent-system/39ab2b71…/3`, `PUT` to the collection
-endpoint with `account_id` in the body).
+**Live agent system (as of 2026-10-19):** `Wren_Restaurants_GOLDEN_TEMPLATE`,
+`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v3 is
+PUBLISHED_SELECTED** (production); **v4 is the DRAFT** we edit (the scripts'
+`DEFAULT_VERSION`). After each publish the draft number moves up — bump
+`DEFAULT_VERSION` in `scripts/talkdesk/lib.mjs` and re-pull. The original
+`The_Wren_Restaurants` system (`98c52e5f…`) was deleted.
+`The_Restaurants_ai-agent-system_US.json` is a local export of the draft —
+editing it does not deploy; read/write via the Talkdesk multi-agent API
+(`GET .../agent-system/39ab2b71…/<version>`, `PUT` to the collection endpoint
+with `account_id` in the body).
+
+What v3 carries (ported from Crestline, 2026-10-18): Talkdesk Authentication
+Gate (Booking/Reservation/Update gated, `authenticated` = `"true"`);
+deterministic `verify_otp` that sets `member_id`, `member_number`, `customer_*`
+and `phone_number` (no `set_customer_context`); one `send_one_time_pin` with a
+US/UK Split flow; act-don't-narrate guards on email/SMS; London clock read
+inside SQL (`now() AT TIME ZONE 'Europe/London'` — the DB session is UTC);
+numbered reservation picker for cancel/change.
+
+Use the scripts in `scripts/talkdesk/` (credentials: `TALKDESK_CLIENT_ID` /
+`TALKDESK_CLIENT_SECRET` in this repo's `.env.local`, never printed):
+- `node scripts/talkdesk/list.mjs [--match <regex>]` — systems/versions on the account
+- `node scripts/talkdesk/pull.mjs` — overwrite the export with the live draft
+- `node scripts/talkdesk/put.mjs` — back up the live draft to
+  `scripts/talkdesk/.backups/` (gitignored), abort unless it is a DRAFT whose
+  `updated_utc` still equals the export's, PUT, verify, re-sync the export.
+  If it aborts, someone edited the draft in the UI: pull, re-apply, push.
+Run each as its own command (not chained) so it matches the allow rule.
