@@ -564,8 +564,8 @@ Keeping the rules in §6 identical is what lets the voice agent and this host
 console share one source of truth without overselling.
 
 **Live agent system (as of 2026-10-19):** `Wren_Restaurants_GOLDEN_TEMPLATE`,
-`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v6 is
-PUBLISHED_SELECTED** (production, 2026-10-19); **v7 is the DRAFT** we edit
+`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v7 is
+PUBLISHED_SELECTED** (production, 2026-10-19); **v8 is the DRAFT** we edit
 (the scripts' `DEFAULT_VERSION`). After each publish the draft number moves
 up — bump `DEFAULT_VERSION` in `scripts/talkdesk/lib.mjs` and re-pull.
 **Publishing from a Talkdesk editor opened before an API push saves the
@@ -601,6 +601,20 @@ numbered list instead of assuming the booking just made); one-sentence
 booking/sent/cancelled messages with the code in the clause the
 Orchestrator keeps; before authentication the Orchestrator routes EVERY
 request to the Auth Agent (except a request for a person).
+
+v7 (tested end to end: update, list + send, cancel) adds: Update Agent
+rebuilt like Booking (one guard query on `service_windows`, SQL-computed
+`turn_minutes`, member reload, ask-then-send) and Reservation Agent tidied
+(cancel stays one turn); all prompts ASCII (except the pound sign) and under
+16k; a "which turn is this?" check at the top of Booking / Update /
+Reservation so a send turn jumps straight to its send step; sub-agent
+completions end with the result and the Orchestrator adds "Is there
+anything else...".
+
+Known open issues: the Orchestrator still sometimes rewords or shortens
+sub-agent messages (once dropped a numbered list) - ask Talkdesk whether
+sub-agent replies can pass through unchanged. Untested live: wrong-code
+lockout, +44 sender, party of 7, "speak to someone" hand-off.
 
 Use the scripts in `scripts/talkdesk/` (credentials: `TALKDESK_CLIENT_ID` /
 `TALKDESK_CLIENT_SECRET` in this repo's `.env.local`, never printed):
