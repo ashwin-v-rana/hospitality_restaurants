@@ -564,8 +564,8 @@ Keeping the rules in §6 identical is what lets the voice agent and this host
 console share one source of truth without overselling.
 
 **Live agent system (as of 2026-10-19):** `Wren_Restaurants_GOLDEN_TEMPLATE`,
-`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v5 is
-PUBLISHED_SELECTED** (production, 2026-10-19); **v6 is the DRAFT** we edit
+`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v6 is
+PUBLISHED_SELECTED** (production, 2026-10-19); **v7 is the DRAFT** we edit
 (the scripts' `DEFAULT_VERSION`). After each publish the draft number moves
 up — bump `DEFAULT_VERSION` in `scripts/talkdesk/lib.mjs` and re-pull.
 **Publishing from a Talkdesk editor opened before an API push saves the
@@ -593,8 +593,14 @@ write; `turn_minutes` computed and RETURNed by the booking SQL; one
 from context); large-party phone fixed to `+442079460123`; Orchestrator
 rewritten (~8k ASCII: never originates questions, customer answers go back
 to the asking sub-agent). v5 adds the Orchestrator whole-message delivery
-examples and Booking Step 3.0 (always load the name). v5 was published
-before it was retested end to end.
+examples and Booking Step 3.0 (always load the name). v6 (tested end to
+end: book, send, cancel) adds: Booking send turn calls SMS before email;
+no quoted WRONG examples in prompts (the model reproduced them); hand-offs
+carry only what the customer said about THIS request (cancel shows the
+numbered list instead of assuming the booking just made); one-sentence
+booking/sent/cancelled messages with the code in the clause the
+Orchestrator keeps; before authentication the Orchestrator routes EVERY
+request to the Auth Agent (except a request for a person).
 
 Use the scripts in `scripts/talkdesk/` (credentials: `TALKDESK_CLIENT_ID` /
 `TALKDESK_CLIENT_SECRET` in this repo's `.env.local`, never printed):
