@@ -9,7 +9,7 @@ export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 export const EXPORT_FILE = resolve(ROOT, 'The_Restaurants_ai-agent-system_US.json');
 export const BACKUP_DIR = resolve(ROOT, 'scripts/talkdesk/.backups');
 export const DEFAULT_SYSTEM_ID = '39ab2b71-e859-443c-92fa-08f357ed8e27'; // Wren_Restaurants_GOLDEN_TEMPLATE
-export const DEFAULT_VERSION = 4;
+export const DEFAULT_VERSION = 5;
 
 const TOKEN_URL = 'https://partner-team1.talkdeskid.com/oauth/token';
 const API = 'https://api.talkdeskapp.com/multi-agent/manage';

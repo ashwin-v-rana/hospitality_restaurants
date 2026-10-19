@@ -564,10 +564,14 @@ Keeping the rules in §6 identical is what lets the voice agent and this host
 console share one source of truth without overselling.
 
 **Live agent system (as of 2026-10-19):** `Wren_Restaurants_GOLDEN_TEMPLATE`,
-`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v3 is
-PUBLISHED_SELECTED** (production); **v4 is the DRAFT** we edit (the scripts'
-`DEFAULT_VERSION`). After each publish the draft number moves up — bump
-`DEFAULT_VERSION` in `scripts/talkdesk/lib.mjs` and re-pull. The original
+`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v4 is
+PUBLISHED_SELECTED** (production, 2026-10-19); **v5 is the DRAFT** we edit
+(the scripts' `DEFAULT_VERSION`). After each publish the draft number moves
+up — bump `DEFAULT_VERSION` in `scripts/talkdesk/lib.mjs` and re-pull.
+**Publishing from a Talkdesk editor opened before an API push saves the
+editor's stale copy over that push** (this dropped two fixes from v4) —
+reload the agent system in the UI before publishing, and diff the
+published version against the export afterwards. The original
 `The_Wren_Restaurants` system (`98c52e5f…`) was deleted.
 `The_Restaurants_ai-agent-system_US.json` is a local export of the draft —
 editing it does not deploy; read/write via the Talkdesk multi-agent API
@@ -581,6 +585,15 @@ and `phone_number` (no `set_customer_context`); one `send_one_time_pin` with a
 US/UK Split flow; act-don't-narrate guards on email/SMS; London clock read
 inside SQL (`now() AT TIME ZONE 'Europe/London'` — the DB session is UTC);
 numbered reservation picker for cancel/change.
+
+What v4 adds: Booking prompt trimmed to ~13k ASCII; email + SMS sent on the
+turn AFTER the member says yes (ask-then-send), member reloaded inside the
+write; `turn_minutes` computed and RETURNed by the booking SQL; one
+`send_confirmation_sms` per agent (US/UK Split flow, reads `phone_number`
+from context); large-party phone fixed to `+442079460123`; Orchestrator
+rewritten (~8k ASCII: never originates questions, customer answers go back
+to the asking sub-agent). The v5 draft also has the whole-message delivery
+examples (Orchestrator) and Booking Step 3.0 (always load the name).
 
 Use the scripts in `scripts/talkdesk/` (credentials: `TALKDESK_CLIENT_ID` /
 `TALKDESK_CLIENT_SECRET` in this repo's `.env.local`, never printed):
