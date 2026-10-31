@@ -139,7 +139,7 @@ All in schema `public`. RLS is enabled on every table.
 | restaurant_id | uuid FK | |
 | member_id | uuid FK → members.id | the member's UUID, never the `NED-` number |
 | slot_date / slot_time | date / time | |
-| party_size | int | **CHECK 1–6** |
+| party_size | int | **CHECK 1–12** (migration 0004); bookings still capped at 6 by the RPC, UI and AI agent |
 | turn_minutes | int | derived from party_size (see §6) |
 | occasion / special_request | text, nullable | |
 | status | text | `booked` \| `cancelled` (default `booked`) |
