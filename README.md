@@ -161,7 +161,9 @@ was deferred.)
   is a **rolling 14-day window anchored on `current_date`**, so re-running keeps
   the demo fresh.
 - `supabase/add_accounts.sql` — real demo people (member numbers `NED-2000xx`);
-  re-run after any re-seed, since `seed.sql` truncates `members`.
+  re-run after any re-seed, since `seed.sql` truncates `members`. **Local only,
+  not in git** (it holds real names, phones and emails); ask the repo owner
+  for a copy.
 
 ### Live project
 Supabase project **`hospitality_restaurants`** (ref `ehsvhlaatnxzhvfzxpnj`,

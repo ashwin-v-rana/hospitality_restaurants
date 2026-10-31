@@ -26,3 +26,6 @@ next-env.d.ts
 
 # Talkdesk agent-system backups (scripts/talkdesk/put.mjs)
 scripts/talkdesk/.backups/
+
+# Real people's names, phones and emails - keep local, never commit
+supabase/add_accounts.sql
