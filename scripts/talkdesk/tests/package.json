@@ -1,0 +1,7 @@
+{
+  "name": "wren-talkdesk-tests",
+  "private": true,
+  "description": "Scripted customer test suite for the Wren Talkdesk AI agent system (ported from Crestline)",
+  "type": "module",
+  "dependencies": { "ws": "^8.18.0" }
+}

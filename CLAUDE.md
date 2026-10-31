@@ -563,9 +563,9 @@ decrement-and-insert CTE this console's `create_reservation` RPC reproduces.
 Keeping the rules in §6 identical is what lets the voice agent and this host
 console share one source of truth without overselling.
 
-**Live agent system (as of 2026-10-19):** `Wren_Restaurants_GOLDEN_TEMPLATE`,
-`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v7 is
-PUBLISHED_SELECTED** (production, 2026-10-19); **v8 is the DRAFT** we edit
+**Live agent system (as of 2026-10-31):** `Wren_Restaurants_GOLDEN_TEMPLATE`,
+`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v8 is
+PUBLISHED_SELECTED** (production, 2026-10-31); **v9 is the DRAFT** we edit
 (the scripts' `DEFAULT_VERSION`). After each publish the draft number moves
 up — bump `DEFAULT_VERSION` in `scripts/talkdesk/lib.mjs` and re-pull.
 **Publishing from a Talkdesk editor opened before an API push saves the
@@ -611,10 +611,42 @@ Reservation so a send turn jumps straight to its send step; sub-agent
 completions end with the result and the Orchestrator adds "Is there
 anything else...".
 
-Known open issues: the Orchestrator still sometimes rewords or shortens
-sub-agent messages (once dropped a numbered list) - ask Talkdesk whether
-sub-agent replies can pass through unchanged. Untested live: wrong-code
-lockout, +44 sender, party of 7, "speak to someone" hand-off.
+v8 (published 2026-10-31, verified identical to the API save; ported from Crestline v25, see
+`~/crestline_insurance/crestline-insurance-demo/talkdesk/AGENT_BUILD_PROMPT.md`):
+- **Reply envelope.** Every sub-agent starts with "HOW YOU REPLY": questions /
+  read-backs / send offers go out as `STATUS: NEED_INPUT | ASK_CUSTOMER: "..."`,
+  results as JSON; the Orchestrator sends answers back as
+  `CUSTOMER_REPLY: "<exact words>"`, and a yes only counts inside a CUSTOMER_REPLY.
+- **Orchestrator rebuilt** (~10.8k): CRITICAL RULES first (route first - this
+  overrides Talkdesk's "ask for missing parameters" hint), a per-turn table keyed
+  on who sent the last message, worked positive examples. Routes by intent
+  regardless of sign-in: the platform gate answers `STATUS: NEEDS_AUTHENTICATION`
+  -> Auth -> back to the gated agent. Routing lives only in `routing_condition`
+  (`## Agent` + `NOT:` lines).
+- **Real human handoff.** Escalation Agent (now with `get_customer_context` +
+  `Load Transfer Data`, created via API placeholder ids) picks a team
+  (`human_request` / `private_events` / `identity_verification` /
+  `system_error`), loads `Transfer Data` (= the system's Application Output) and
+  calls `transfer_to_human`; the Orchestrator completes it with
+  `transfer_to_human` (a sub-agent's transfer is not terminal). Studio must route
+  the `escalate` exit and show `Transfer Data` to the team member.
+- **OTP lockout in the workflow.** `verify_otp` counts wrong codes
+  (`otp_attempts`), returns `LOCKED` on the 3rd and `otp_next_step` (the exact
+  next action, different wording on the 2nd wrong code).
+- **ASCII only.** `£25` was garbled by the model into a control char + "35"
+  (customer quoted £35); now "25 pounds".
+
+Test suite: `scripts/talkdesk/tests/` (see its README; real SMS/email to the
+test member NED-100515). Published v7 baseline 18/23; v8 draft 21-22/23 per run,
+with handoffs 6/6 and lockout 4/4 after the fixes.
+
+Known open issues (v8): sub-agent flakiness, not relay - once the Booking
+Agent sent the SMS but skipped `send_email` while saying both went; the Update
+Agent sometimes improvises its own confirmation wording and runs Step 1 SQL
+before Step 0 (literal `<working_member_id>`, returns nothing). The
+Orchestrator still occasionally replaces a sub-agent's completion with its own
+"thank you" - the suite's `code_dropped` fault tracks it. Untested live: +44
+sender.
 
 Use the scripts in `scripts/talkdesk/` (credentials: `TALKDESK_CLIENT_ID` /
 `TALKDESK_CLIENT_SECRET` in this repo's `.env.local`, never printed):
