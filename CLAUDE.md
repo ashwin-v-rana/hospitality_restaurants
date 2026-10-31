@@ -648,10 +648,19 @@ block; customer wording unchanged. `send_confirmation_sms` returns an
 `sms_next_step` line. Draft suite 26/27.
 
 Known open issues (v9):
-- The Update Agent skips `send_email` after the SMS in its send turn (3 of the
-  last 3 update runs) and still says both went. Databricks shows the
-  `sms_next_step` line is read, then Talkdesk appends its parameter hint and
-  ~18k date block after the tool result and the model replies instead.
+- The Update Agent sometimes skips `send_email` after the SMS in its send turn
+  and still says both went: 2 of 8 compact-prompt update runs (5 of 5 in a
+  dedicated live re-run); compact Booking 4 of 4 (long prompts were ~2 in 5).
+  Databricks diff of passing vs failing calls: identical instruction, steps,
+  `sms_next_step` and context; no cause in our prompt. Talkdesk appends its
+  ~950-char hint and ~18k DATE RESOLUTION block after the tool result, so
+  those are the last thing the model reads. **Raised with Talkdesk product
+  management on 2026-10-31 - waiting for feedback; resume from here.**
+  Write-up (owner-private, share from its page):
+  https://claude.ai/artifact/4rXjwfdW4r8TTfhsyLHv9Z (source
+  `scripts/talkdesk/tests/runs/date_block_issue.html`, gitignored). Key
+  interaction IDs: failing 1fa681fb..., 7c1b42c6..., b21a5bda...; passing
+  7eca103f..., f96832dc..., 624d61db... (run files under `tests/runs/`).
   Email stays MCP and SMS stays workflow - never combine them (user decision).
 - Update (rarely) writes before the yes. A turn-number guard is designed but
   ON HOLD until the user says so.
