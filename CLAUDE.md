@@ -564,8 +564,8 @@ Keeping the rules in §6 identical is what lets the voice agent and this host
 console share one source of truth without overselling.
 
 **Live agent system (as of 2026-10-31):** `Wren_Restaurants_GOLDEN_TEMPLATE`,
-`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v8 is
-PUBLISHED_SELECTED** (production, 2026-10-31); **v9 is the DRAFT** we edit
+`agent_system_id` `39ab2b71-e859-443c-92fa-08f357ed8e27`. **v9 is
+PUBLISHED_SELECTED** (production, 2026-10-31); **v10 is the DRAFT** we edit
 (the scripts' `DEFAULT_VERSION`). After each publish the draft number moves
 up — bump `DEFAULT_VERSION` in `scripts/talkdesk/lib.mjs` and re-pull.
 **Publishing from a Talkdesk editor opened before an API push saves the
@@ -640,13 +640,33 @@ Test suite: `scripts/talkdesk/tests/` (see its README; real SMS/email to the
 test member NED-100515). Published v7 baseline 18/23; v8 draft 21-22/23 per run,
 with handoffs 6/6 and lockout 4/4 after the fixes.
 
-Known open issues (v8): sub-agent flakiness, not relay - once the Booking
-Agent sent the SMS but skipped `send_email` while saying both went; the Update
-Agent sometimes improvises its own confirmation wording and runs Step 1 SQL
-before Step 0 (literal `<working_member_id>`, returns nothing). The
-Orchestrator still occasionally replaces a sub-agent's completion with its own
-"thank you" - the suite's `code_dropped` fault tracks it. Untested live: +44
-sender.
+v9 (published 2026-10-31 via `publish.mjs`) compacts every prompt (sub-agents
+53.5k -> 30.4k, Orchestrator 10.8k -> 8.2k): one availability query that also
+returns the seating window and nearby times; one turn check per agent (writes
+only in the turn that carries the customer's yes); one shared HOW YOU REPLY
+block; customer wording unchanged. `send_confirmation_sms` returns an
+`sms_next_step` line. Draft suite 26/27.
+
+Known open issues (v9):
+- The Update Agent skips `send_email` after the SMS in its send turn (3 of the
+  last 3 update runs) and still says both went. Databricks shows the
+  `sms_next_step` line is read, then Talkdesk appends its parameter hint and
+  ~18k date block after the tool result and the model replies instead.
+  Email stays MCP and SMS stays workflow - never combine them (user decision).
+- Update (rarely) writes before the yes. A turn-number guard is designed but
+  ON HOLD until the user says so.
+- Context: each sub-agent call is ~83k chars, of which ~45k is Talkdesk's
+  wrapper and ~19k its post-tool hint + date block; our prompt is ~11k.
+
+**Debugging rule: query Databricks for every failure before proposing a fix.**
+Read the failing model call (what it received, in what order, what it chose)
+and compare it with a passing run of the same flow.
+`cd ~/ai-agents-deployments/.toolkit && npx tsx <repo>/scripts/talkdesk/tests/td_dbx.ts <run.json> [outDir] [padMinutes]`
+pulls one simulator run's LLM calls with a window of the run's own timestamps
++/- 5 min (seconds, not the whole-day CLI window). Files are numbered newest
+first and contain full prompts + the test phone: keep them in the gitignored
+`runs/`. If auth has expired the user runs
+`! cd ~/ai-agents-deployments/.toolkit && npm run obs:databricks -- ensure-auth --env prd --region us`.
 
 Use the scripts in `scripts/talkdesk/` (credentials: `TALKDESK_CLIENT_ID` /
 `TALKDESK_CLIENT_SECRET` in this repo's `.env.local`, never printed):
@@ -656,4 +676,9 @@ Use the scripts in `scripts/talkdesk/` (credentials: `TALKDESK_CLIENT_ID` /
   `scripts/talkdesk/.backups/` (gitignored), abort unless it is a DRAFT whose
   `updated_utc` still equals the export's, PUT, verify, re-sync the export.
   If it aborts, someone edited the draft in the UI: pull, re-apply, push.
+- `node scripts/talkdesk/publish.mjs [--desc "..."]` — publish the export's
+  draft via the API (works for this client); refuses if the draft changed since
+  our last save. Afterwards bump `DEFAULT_VERSION` and pull the new draft.
+- Pulling to a NEW `--out` file drops `account_id` (it is merged only into an
+  existing file): copy the export there first, then pull.
 Run each as its own command (not chained) so it matches the allow rule.

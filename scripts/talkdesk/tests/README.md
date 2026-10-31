@@ -33,6 +33,7 @@ there must be open `time_slots` that far out, see `/admin/slots`).
 
 ```bash
 ./run_suite.sh v8_try1          # against the DRAFT version
+CHAINS="1 2" ./run_suite.sh v9_try1   # run the booking chain twice
 ./run_suite.sh v7_live live     # against the published version
 python3 -I td_score.py runs/v8_try1/*.json      # rescore, with agent hops
 node td_sim.mjs true out.json probe:"Can I book a table?"   # one scenario
@@ -44,9 +45,9 @@ node td_sim.mjs true out.json probe:"Can I book a table?"   # one scenario
 |---|---|---|
 | `probe:<text>` | the text, first turn only | the Orchestrator routes (to the owning sub-agent, or Auth) instead of answering itself |
 | `book` | table for 2, test date, 7:30 PM; yes to send | Booking Agent books it and calls send_email + send_confirmation_sms |
-| `update` | move it to 8:30 PM; no to send | Update Agent reports the change |
-| `lookup` | do I have reservations coming up | Reservation Agent lists them |
-| `cancel` | cancel a reservation | Reservation Agent cancels the test booking |
+| `update` | move it to 8:30 PM; yes to send | Update Agent reports the change and calls send_email + send_confirmation_sms |
+| `lookup` | do I have reservations coming up; yes to send | Reservation Agent lists them and sends both |
+| `cancel` | cancel a reservation | Reservation Agent cancels the test booking and sends both confirmations |
 | `large_party` | table for 9 | the large-party phone number, no write |
 | `person` / `private_event` | a person / a private dinner for 30 | Escalation Agent, Load Transfer Data, `escalate` exit (v7 baseline: phone number given) |
 | `lockout` | 4 wrong codes | handoff via the Escalation Agent |
@@ -56,3 +57,17 @@ Every run also fails on Orchestrator faults: `answered_for_customer`,
 `wrote_without_confirmation` (a reservations/time_slots write before the
 customer said yes), and the platform fallback "Sorry, I cannot handle your
 request right now."
+
+## Debugging a failure (always, before proposing a fix)
+
+Pull the failing run's LLM calls from Databricks and read the call where it went
+wrong; compare with a passing run of the same flow:
+
+```bash
+cd ~/ai-agents-deployments/.toolkit
+npx tsx <repo>/scripts/talkdesk/tests/td_dbx.ts <repo>/scripts/talkdesk/tests/runs/<run>/<scenario>.json
+```
+
+`td_dbx.ts` reuses the toolkit's auth/query code with a window of the run's own
+timestamps +/- 5 minutes (a few seconds per pull). Output files are numbered
+newest first and hold full prompts and the test phone - they stay in `runs/`.

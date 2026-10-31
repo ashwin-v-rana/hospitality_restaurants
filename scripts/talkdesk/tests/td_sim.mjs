@@ -83,6 +83,15 @@ async function memberPhone() {
   return rows[0].phone;
 }
 
+async function openTestBookings() {
+  const d = new Date(Date.now() + Number(process.env.TD_BOOK_DAYS || 5) * 864e5).toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+  const m = await (await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/members?member_number=eq.${MEMBER}&select=id`, {
+    headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` } })).json();
+  const r = await (await fetch(`${env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/reservations?member_id=eq.${m[0].id}&slot_date=eq.${d}&status=eq.booked&select=id`, {
+    headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` } })).json();
+  return r.length;
+}
+
 const records = [];
 const transcript = [];
 const wrongCodes = ['111111', '222222', '333333', '444444'];
@@ -124,7 +133,7 @@ function nextUserMessage(agent) {
   }
   // Offers to send details by email and phone.
   if (/send/.test(a) && /(email|phone)/.test(a) && /\?\s*$/.test(a)) {
-    return scenario === 'book' ? 'Yes please.' : 'No, thanks.';
+    return ['book', 'update', 'lookup'].includes(scenario) ? 'Yes please.' : 'No, thanks.';
   }
   // Read-backs before a write.
   if ((/(shall i|should i|go ahead|is that (correct|right)|confirm)/.test(a) && /\?\s*$/.test(a)) || /say yes|yes to confirm|correct\?/.test(a)) {
@@ -168,6 +177,10 @@ function exitOf(r) {
   const tok = await token();
   if (isDraftArg === '--token') { console.log('token ready'); return; }
   PHONE = await memberPhone();
+  // A booking chain starts clean: an orphaned test booking would make update/cancel pick the wrong one.
+  if (scenario === 'book' && (await openTestBookings()) > 0) {
+    console.log(`[${scenario}] ABORT: ${MEMBER} already has an open booking on ${BOOK_DATE}; cancel it first`); process.exit(3);
+  }
   const sessionId = randomUUID();
   const interactionId = randomUUID().replace(/-/g, '');
   const res = await fetch(`${API}/chat/context`, {

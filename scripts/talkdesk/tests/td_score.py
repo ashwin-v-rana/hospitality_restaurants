@@ -98,14 +98,16 @@ def score(d):
         ok = said(recs, 'Booking Agent', r'booked under confirmation code') and 'send_email' in used and 'send_confirmation_sms' in used
         why = f"booked={said(recs, 'Booking Agent', r'booked under')} email={'send_email' in used} sms={'send_confirmation_sms' in used}"
     elif sc == 'update':
-        ok = said(recs, 'Update Agent', r'is now a table for|has been updated')
-        why = 'updated' if ok else 'NOT updated'
+        both = 'send_email' in used and 'send_confirmation_sms' in used
+        ok = said(recs, 'Update Agent', r'is now a table for|has been updated') and both
+        why = f"updated={said(recs, 'Update Agent', r'is now a table for|has been updated')} email={'send_email' in used} sms={'send_confirmation_sms' in used}"
     elif sc == 'lookup':
-        ok = said(recs, 'Reservation Agent', r'table for') and re.search(r'table for', heard, re.I) is not None
-        why = 'listed' if ok else 'NOT listed'
+        listed = said(recs, 'Reservation Agent', r'table for') and re.search(r'table for', heard, re.I) is not None
+        ok = listed and 'send_email' in used and 'send_confirmation_sms' in used
+        why = f"listed={listed} email={'send_email' in used} sms={'send_confirmation_sms' in used}"
     elif sc == 'cancel':
-        ok = said(recs, 'Reservation Agent', r'is cancelled')
-        why = 'cancelled' if ok else 'NOT cancelled'
+        ok = said(recs, 'Reservation Agent', r'is cancelled') and 'send_email' in used and 'send_confirmation_sms' in used
+        why = f"cancelled={said(recs, 'Reservation Agent', r'is cancelled')} email={'send_email' in used} sms={'send_confirmation_sms' in used}"
     elif sc == 'large_party':
         wrote = any(re.search(r'INSERT INTO\s+(public\.)?reservations', json.dumps(r.get('tool_call') or {}), re.I) for r in recs)
         ok = phone_given and not wrote

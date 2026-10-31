@@ -5,7 +5,7 @@
 # test booking (party of 2, TD_BOOK_DAYS ahead) and ends with it cancelled.
 cd "${0:A:h}"; OUT=runs/${1:?usage: run_suite.sh <name> [draft|live]}; mkdir -p $OUT
 DRAFT=true; [[ $2 == live ]] && DRAFT=false
-node td_sim.mjs --token || exit 1
+rm -f .tok; node td_sim.mjs --token || exit 1   # fresh token: a cached one can expire mid-run
 run() { node td_sim.mjs $DRAFT $OUT/$1.json "$2" > $OUT/$1.log 2>&1 }
 for i in 1 2 3; do
   run probe_book_$i    "probe:Can I book a table for 2 on Friday at 8pm?" &
@@ -18,5 +18,7 @@ done
 run person_1 person & run private_event_1 private_event & run large_party_1 large_party & wait
 run lockout_1 lockout
 # Booking chain on the one test booking: book -> update -> lookup -> cancel.
-run book_1 book && run update_1 update && run lookup_1 lookup && run cancel_1 cancel
+for c in ${=CHAINS:-1}; do
+  run book_$c book && run update_$c update && run lookup_$c lookup && run cancel_$c cancel
+done
 python3 -I td_score.py $OUT/*.json | grep -E '^(PASS|FAIL)|passed$'
