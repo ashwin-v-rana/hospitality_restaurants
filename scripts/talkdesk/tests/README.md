@@ -6,12 +6,36 @@ that marks each conversation PASS or FAIL. Ported from the Crestline suite
 (`~/crestline_insurance/crestline-insurance-demo/talkdesk/tests`).
 
 **These runs use real tools.** Every run that reaches sign-in sends a real SMS
-code to the test member (default `NED-100515`, Raj Patel, which carries the
-owner's own phone and email). `book` / `update` / `cancel` write real
-reservations and send real confirmation email + SMS. The booking chain only
+code to the test member's phone (`TD_TEST_MEMBER`, required - see below), and
+`book` / `update` / `cancel` write real reservations and send real confirmation
+email + SMS to that member. The booking chain only
 touches its own test booking (party of 2, `TD_BOOK_DAYS` ahead, 7:30 PM, moved
 to 8:30 PM) and ends with it cancelled; the change/cancel scenarios say yes only
 to a read-back that names the test date.
+
+## Running from a fresh clone
+
+You need:
+1. **`.env.local`** in the repo root (never committed) with:
+   - `TALKDESK_CLIENT_ID` / `TALKDESK_CLIENT_SECRET` - a partner-team1 OAuth
+     client that has `ai-agent-context:write` (simulator) and
+     `ai-agent-platform-agents:read/write` (export/save/publish scripts);
+   - `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` - used only to read
+     the test member's phone and check for leftover test bookings;
+   - `TD_TEST_MEMBER=<member_number>` - see the next point.
+2. **Your own test member.** Create a member (console `/members`, manager or
+   admin) with YOUR phone (E.164) and YOUR email, and put its `member_number`
+   in `TD_TEST_MEMBER`. Every run texts that phone and emails that address, so
+   never use someone else's member. The simulated customer reads the sign-in
+   code from the workflow output, so the code itself does not need to be typed.
+3. **Open slots** about `TD_BOOK_DAYS` (default 5) days ahead - if the
+   availability has lapsed, use `/admin/slots` -> "Open next 14 days".
+4. **Node 22+ and Python 3** (`npm install` here installs `ws`).
+5. Optional, Talkdesk staff only: the internal `ai-agents-deployments` repo at
+   `~/ai-agents-deployments` and a Databricks login, for `td_dbx.ts`.
+
+The agent system, account and tenant ids are the Wren ones (in `td_sim.mjs`
+and `../lib.mjs`); override `TD_SYSTEM_ID` to test another copy.
 
 ## Setup
 
@@ -26,7 +50,7 @@ Credentials come from the repo's `.env.local`: `TALKDESK_CLIENT_ID` /
 (only to read the test member's phone, which is never printed or saved: run
 files show `<test phone>`; the sign-in code shows as `<correct code>`).
 
-Env (optional): `TD_SYSTEM_ID`, `TD_TEST_MEMBER`, `TD_BOOK_DAYS` (default 5;
+Env: `TD_TEST_MEMBER` (required), optional `TD_SYSTEM_ID`, `TD_BOOK_DAYS` (default 5;
 there must be open `time_slots` that far out, see `/admin/slots`).
 
 ## Run

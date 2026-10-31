@@ -6,7 +6,7 @@
 // Usage: node td_sim.mjs <isDraft true|false> <outJson> <scenario>
 // Scenarios: book | update | lookup | cancel | large_party | person | private_event |
 //            lockout | probe:<first message>
-// Env: TD_SYSTEM_ID (default Wren GOLDEN_TEMPLATE), TD_TEST_MEMBER (default NED-100515),
+// Env: TD_SYSTEM_ID (default Wren GOLDEN_TEMPLATE), TD_TEST_MEMBER (REQUIRED, env or .env.local),
 //      TD_BOOK_DAYS (days ahead to book, default 5).
 //
 // REAL TOOLS: runs that reach sign-in send a real SMS code to the test member's phone;
@@ -32,7 +32,10 @@ const ACCOUNT = '68668a003d12ae2f90ebbcb4';
 const API = 'https://api.talkdeskapp.com';
 const ORIGIN = 'https://partner-team1.mytalkdesk.com';
 const WS_BASE = 'wss://ai-agent-platform.talkdeskapp.com';
-const MEMBER = process.env.TD_TEST_MEMBER || 'NED-100515';
+// The member whose phone receives the sign-in codes and whose email gets confirmations: it must be
+// YOUR OWN test member. No default, so a fresh clone never texts someone else.
+const MEMBER = process.env.TD_TEST_MEMBER || env.TD_TEST_MEMBER;
+if (!MEMBER && isDraftArg !== '--token') { console.error('Set TD_TEST_MEMBER (in .env.local or the environment) to a member_number whose phone and email are yours.'); process.exit(2); }
 
 // ---- test booking: party of 2, N days ahead (London), 7:30 PM; update moves it to 8:30 PM.
 const londonDate = (plusDays) => {
